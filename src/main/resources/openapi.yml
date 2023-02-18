@@ -1,0 +1,39 @@
+openapi: 3.0.0
+info:
+    title: nhatrotot's backend
+    version: 1.0.0
+servers:
+    - url: http://localhost:8080/api
+tags:
+    - name: root
+      description: test openapi features
+paths:
+    /first_request:
+        get:
+            operationId: helloWorld
+            summary: test api
+            tags:
+                - root
+            responses:
+                "200":
+                    description: ok
+                    content:
+                        text/plain:
+                            schema:
+                                type: string
+                                example: "Hello world"
+                "404":
+                    description: Bad request.
+                    content:
+                        text/plain:
+                            schema:
+                                type: string
+components:
+    securitySchemes:
+        bearerAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT # optional, for documentation purposes only
+
+security:
+    - bearerAuth: []
