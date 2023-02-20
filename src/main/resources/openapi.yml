@@ -7,6 +7,8 @@ servers:
 tags:
     - name: root
       description: test openapi features
+    - name: upload api
+      description: api for uploading image and video data
 paths:
     /first_request:
         get:
@@ -28,7 +30,53 @@ paths:
                         text/plain:
                             schema:
                                 type: string
+    /file:
+        post:
+            operationId: postFileHandle
+            summary: upload a file to server
+            description: upload a file to server
+            tags:
+                - "upload api"
+            requestBody:
+                required: true
+                content:
+                    multipart/form-data:
+                        schema:
+                            $ref: "#/components/schemas/FileUpload"
+            responses:
+                "200":
+                    description: file upload success
+                    content:
+                        text/plain:
+                            schema:
+                                type: string
+                                description: url of video or image
+                                example: "https://int3509.s3.ap-southeast-1.amazonaws.com/2022-12-14+09-39-15.mp4"
 components:
+    schemas:
+        FileUpload:
+            title: file object
+            description: Fields of upload file.
+            type: object
+            properties:
+                file:
+                    type: string
+                    format: binary
+                    title: file
+                    description: file that you want to upload
+                file_type:
+                    type: string
+                    enum:
+                        - video
+                        - image
+                    title: file's type
+                    description: type of file
+                    example: video
+                GUID:
+                    type: string
+                    title: GUID
+                    description: Send GUID that you have obtained from sse ("/progress") so server can push data through sse which has the same GUID
+
     securitySchemes:
         bearerAuth:
             type: http

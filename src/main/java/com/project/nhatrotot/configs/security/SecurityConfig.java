@@ -27,8 +27,6 @@ public class SecurityConfig {
             throws Exception {
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(new JwtAuthorityConverter());
-        // Enable anonymous
-        // http.anonymous();
 
         http.cors().configurationSource(corsConfigurationSource());
 

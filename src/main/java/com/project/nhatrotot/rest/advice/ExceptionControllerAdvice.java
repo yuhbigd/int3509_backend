@@ -6,11 +6,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.nhatrotot.rest.advice.CustomException.CustomException;
 
 @ControllerAdvice
 public class ExceptionControllerAdvice {
 
-    @ExceptionHandler(Exception.class)
+    @ExceptionHandler(value = { Exception.class, CustomException.class })
     public ResponseEntity<String> exception(Exception e) {
         ObjectMapper mapper = new ObjectMapper();
         ErrorInfo errorInfo = new ErrorInfo(e);
@@ -28,8 +29,8 @@ public class ExceptionControllerAdvice {
         public final String exMessage;
 
         public ErrorInfo(Exception ex) {
-            this.className = ex.getClass().getName();
-            this.exMessage = ex.getLocalizedMessage();
+            this.className = ex.getClass().getSimpleName();
+            this.exMessage = ex.getMessage();
         }
     }
 }
