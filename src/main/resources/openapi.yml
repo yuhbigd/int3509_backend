@@ -52,6 +52,12 @@ paths:
                                 type: string
                                 description: url of video or image
                                 example: "https://int3509.s3.ap-southeast-1.amazonaws.com/2022-12-14+09-39-15.mp4"
+                "400":
+                    description: Bad request.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/BadRequestResponse"
 components:
     schemas:
         FileUpload:
@@ -75,7 +81,83 @@ components:
                 GUID:
                     type: string
                     title: GUID
+                    format: uuid
                     description: Send GUID that you have obtained from sse ("/progress") so server can push data through sse which has the same GUID
+        BadRequestResponse:
+            title: bad request.
+            description: there is an error happening when server handle request.
+            type: object
+            properties:
+                className:
+                    type: string
+                    title: name of the error
+                    description: class name of the error
+                    example: FileMaximumExceedException
+                exMessage:
+                    type: string
+                    title: error message
+                    description: error message
+                    example: File not valid
+        UserFields:
+            title: user fields
+            description: Editable fields of a user type.
+            type: object
+            properties:
+                gender:
+                    type: string
+                    title: user's gender
+                    enum: 
+                        - male
+                        - female
+                        - other
+                phoneNumber:
+                    type: string
+                    title: user's phone number
+                    pattern: '^\d{1,12}$'
+                intro:
+                    type: string
+                    title: user's intro
+                image:
+                    type: string
+                    title: user's image url
+                birthDate:
+                    type: string
+                    title: user's birth date
+                    format: date
+        PublicUserField:
+            title: user fields that are public fields
+            allOf:
+                - $ref: "#/components/schemas/UserFields"
+                - type: object
+                  properties:
+                    firstName:
+                        title: user's first name
+                        type: string
+                    lastName:
+                        title: user's last name
+                        type: string
+                    email: 
+                        title: user's email
+                        type: string
+                    registerAt:
+                        title: user's created Date
+                        type: string
+                        format: date
+                    banned:
+                        title: user's status
+                        type: boolean
+                        nullable: true
+        UserCreationFields:
+            title: user dto for sign in
+            allOf:
+                - $ref: "#/components/schemas/PublicUserField"
+                - type: object
+                  properties:
+                    password:
+                        type: string
+                        format: password
+
+
 
     securitySchemes:
         bearerAuth:

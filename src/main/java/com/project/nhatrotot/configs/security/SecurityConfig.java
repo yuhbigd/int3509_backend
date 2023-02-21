@@ -42,7 +42,7 @@ public class SecurityConfig {
                 .and()
                 .oauth2ResourceServer()
                 .jwt().jwtAuthenticationConverter(jwtAuthenticationConverter);
-
+        // http.antMatcher("/api/auth/").authorizeRequests().anyRequest().permitAll();
         return http.build();
     }
 

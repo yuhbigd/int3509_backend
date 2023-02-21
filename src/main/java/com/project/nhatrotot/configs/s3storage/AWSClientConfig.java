@@ -23,9 +23,6 @@ public class AWSClientConfig {
 
     @Bean
     TransferManager transferManager() {
-        System.out.println(secretAccessKey);
-        System.out.println(accessKeyId);
-
         final BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(accessKeyId, secretAccessKey);
         AmazonS3 s3Client = AmazonS3ClientBuilder
                 .standard()

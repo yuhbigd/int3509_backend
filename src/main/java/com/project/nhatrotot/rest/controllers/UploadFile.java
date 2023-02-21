@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
 import com.project.nhatrotot.rest.api.FileApi;
 import com.project.nhatrotot.service.file_service.FileUploadService;
 
@@ -42,12 +40,17 @@ public class UploadFile implements FileApi {
         return sseEmitter;
     }
 
+    @GetMapping(value = "/auth/login")
+    String test() {
+        return "test login auth";
+    }
+
     @Override
-    public ResponseEntity<String> postFileHandle(MultipartFile file, @Valid String fileType, @Valid String GUID)
-            throws AmazonServiceException, AmazonClientException {
-        SseEmitter sseEmitter = sseMap.get(GUID);
+    public ResponseEntity<String> postFileHandle(MultipartFile file, @Valid String fileType, @Valid UUID GUID) {
+        // TODO Auto-generated method stub
+        SseEmitter sseEmitter = sseMap.get(GUID.toString());
         if (sseEmitter == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("GUID invalid", HttpStatus.NOT_FOUND);
         }
         String result = "ERROR";
         try {
