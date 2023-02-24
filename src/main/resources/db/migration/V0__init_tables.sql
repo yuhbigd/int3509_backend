@@ -463,7 +463,7 @@ DELIMITER $$
 USE `db`$$
 DROP TRIGGER IF EXISTS `db`.`rating_AFTER_INSERT` $$
 USE `db`$$
-CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`rating_AFTER_INSERT` AFTER INSERT ON `rating` FOR EACH ROW
+CREATE DEFINER = CURRENT_USER TRIGGER `db`.`rating_AFTER_INSERT` AFTER INSERT ON `rating` FOR EACH ROW
 BEGIN
 	DECLARE avg_rating_variable float;
     SET @avg_rating_variable := (SELECT ROUND(avg(rating), 2) FROM `rating` WHERE user_id = NEW.user_id);

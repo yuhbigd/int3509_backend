@@ -21,16 +21,25 @@ public class AWSClientConfig {
     @Value("${app.properties.aws.secret_key}")
     private String secretAccessKey;
 
-    @Bean
-    TransferManager transferManager() {
+    private AmazonS3 createClient() {
         final BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(accessKeyId, secretAccessKey);
-        AmazonS3 s3Client = AmazonS3ClientBuilder
+        return AmazonS3ClientBuilder
                 .standard()
                 .withCredentials(new AWSStaticCredentialsProvider(basicAWSCredentials))
                 .withRegion(Regions.AP_SOUTHEAST_1)
                 .build();
+    }
+
+    @Bean
+    AmazonS3 client() {
+        return createClient();
+    }
+
+    @Bean
+    TransferManager transferManager() {
+
         return TransferManagerBuilder.standard()
-                .withS3Client(s3Client)
+                .withS3Client(createClient())
                 .withMultipartUploadThreshold((long) (5 * 1024 * 1024))
                 .withExecutorFactory(() -> Executors.newFixedThreadPool(10))
                 .build();

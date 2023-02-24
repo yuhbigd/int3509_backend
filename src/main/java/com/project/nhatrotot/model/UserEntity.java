@@ -22,10 +22,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-enum Gender {
-    male, female, other;
-}
-
 @Entity
 @Data
 @NoArgsConstructor
@@ -48,8 +44,8 @@ public class UserEntity {
     @NotBlank
     @Length(max = 500)
     @Column(name = "email")
+    @Pattern(regexp = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
     private String email;
-    @NotBlank
     @Column(name = "register_at")
     private LocalDateTime registerAt;
     @NotBlank
@@ -58,9 +54,8 @@ public class UserEntity {
     @Column(name = "phone_number")
     private String phoneNumber;
     @Column(name = "banned")
-    private boolean banned = false;
+    private boolean banned;
     @Column(name = "birth_date")
-    @NotBlank
     private LocalDateTime birthDate;
     @Column(name = "balance")
     private BigDecimal balance;
@@ -72,7 +67,6 @@ public class UserEntity {
     @Enumerated(EnumType.STRING)
     private Gender gender;
     @Column(name = "avg_rating")
-    @NotBlank
     private float avgRating;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "title", referencedColumnName = "id")
@@ -80,4 +74,12 @@ public class UserEntity {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role", referencedColumnName = "id")
     private UserRole role;
+
+    public boolean getBanned() {
+        return this.banned;
+    }
+
+    public void setBanned(boolean banned) {
+        this.banned = banned;
+    }
 }

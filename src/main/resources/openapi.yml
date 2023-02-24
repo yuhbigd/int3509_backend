@@ -7,24 +7,28 @@ servers:
 tags:
     - name: root
       description: test openapi features
-    - name: upload api
-      description: api for uploading image and video data
+    - name: file
+      description: apis for uploading and delete image and video data
+    - name: auth
+      description: apis for authentication feature
+    - name: user
+      description: apis for user feature
 paths:
     /first_request:
         get:
             operationId: helloWorld
-            summary: test api
+            summary: test auth api
             tags:
                 - root
             responses:
-                "200":
+                200:
                     description: ok
                     content:
                         text/plain:
                             schema:
                                 type: string
                                 example: "Hello world"
-                "404":
+                404:
                     description: Bad request.
                     content:
                         text/plain:
@@ -36,7 +40,7 @@ paths:
             summary: upload a file to server
             description: upload a file to server
             tags:
-                - "upload api"
+                - "file"
             requestBody:
                 required: true
                 content:
@@ -44,7 +48,7 @@ paths:
                         schema:
                             $ref: "#/components/schemas/FileUpload"
             responses:
-                "200":
+                200:
                     description: file upload success
                     content:
                         text/plain:
@@ -52,13 +56,450 @@ paths:
                                 type: string
                                 description: url of video or image
                                 example: "https://int3509.s3.ap-southeast-1.amazonaws.com/2022-12-14+09-39-15.mp4"
-                "400":
-                    description: Bad request.
+                400:
+                    $ref: "#/components/responses/BadRequest"
+        delete:
+            operationId: bulkDeleteFilesHandle
+            summary: bulk Delete Files
+            description: bulk delete files
+            tags:
+                - "file"
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                images:
+                                    type: array
+                                    items:
+                                        type: string
+                            required:
+                                - images
+            responses:
+                200:
+                    description: ok
+                400:
+                    $ref: "#/components/responses/BadRequest"
+    /auth/signup:
+        post:
+            operationId: signUpHandle
+            summary: sign up
+            description: endpoint for user sign up
+            tags:
+                - "auth"
+            requestBody:
+                required: true
+                description: details of new user
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/UserCreationFields"
+            responses:
+                201:
+                    description: the user was successfully created.
+                400:
+                    $ref: "#/components/responses/BadRequest"
+    /auth/password:
+        put:
+            operationId: changePasswordHandle
+            summary: change password
+            description: endpoint for user change pass
+            tags:
+                - "auth"
+            requestBody:
+                required: true
+                description: old and new pass
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                oldPassword:
+                                    type: string
+                                    format: password
+                                    pattern: '\S{8,30}'
+                                newPassword:
+                                    type: string
+                                    format: password
+                                    pattern: '\S{8,30}'
+                            required:
+                                - oldPassword
+                                - newPassword
+            responses:
+                200:
+                    description: OK, log out user after success
+                400:
+                    $ref: "#/components/responses/BadRequest"
+                401:
+                    description: wrong current password.
                     content:
                         application/json:
                             schema:
                                 $ref: "#/components/schemas/BadRequestResponse"
+
+    /auth/reset:
+        post:
+            operationId: resetPasswordHandle
+            summary: reset user password by email
+            description: reset user password by email
+            tags:
+                - "auth"
+            requestBody:
+                required: true
+                description: user's email
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                email:
+                                    title: user's email
+                                    pattern: '^[^\s@]+@[^\s@]+\.[^\s@]+$'
+                                    type: string
+                            required:
+                                - email
+            responses:
+                200:
+                    description: mail has sent.
+                400:
+                    $ref: "#/components/responses/BadRequest"
+    /auth/sub-admin:
+        post:
+            operationId: createSubAdminHandle
+            summary: sign up
+            description: endpoint for create sub admin
+            tags:
+                - "auth"
+            requestBody:
+                required: true
+                description: details of new sub admin
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/UserCreationFields"
+            responses:
+                201:
+                    description: the sub admin was successfully created.
+                400:
+                    $ref: "#/components/responses/BadRequest"
+    /auth/sub-admin/{userId}/password:
+        put:
+            operationId: resetSAPasswordHandle
+            summary: reset sub-admin password
+            tags:
+                - "auth"
+            parameters:
+                - name: userId
+                  in: path
+                  description: id of the sub admin
+                  required: true
+                  schema:
+                      type: string
+                      format: uuid
+            requestBody:
+                required: true
+                description: sub-admin's password
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                password:
+                                    title: user's password
+                                    type: string
+                            required:
+                                - password
+            responses:
+                200:
+                    description: reset successfully .
+                400:
+                    $ref: "#/components/responses/BadRequest"
+
+    /auth/users/{userId}:
+        delete:
+            tags:
+                - "auth"
+            operationId: banUserHandle
+            description: sub-admin or admin toggle activating user
+            parameters:
+                - name: userId
+                  in: path
+                  description: id of the user
+                  required: true
+                  schema:
+                      type: string
+                      format: uuid
+            responses:
+                200:
+                    description: user delete successfully
+                400:
+                    $ref: "#/components/responses/BadRequest"
+                403:
+                    description: User need higher role to do this thing
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/BadRequestResponse"
+    /users:
+        get:
+            tags:
+                - "user"
+            operationId: getListUserInformation
+            description: get list of users including user's public information
+            parameters:
+                - name: page
+                  in: query
+                  description: Page number
+                  schema:
+                      type: integer
+                      minimum: 0
+                      default: 0
+                  required: false
+                - name: size
+                  in: query
+                  schema:
+                      type: integer
+                      minimum: 1
+                      default: 20
+                  description: Page size
+                  required: false
+            responses:
+                200:
+                    description: list of user info and paging details
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/UserPublicInformationPage"
+                400:
+                    $ref: "#/components/responses/BadRequest"
+    /users/{userId}:
+        get:
+            tags:
+                - "user"
+            operationId: getUserInformation
+            description: return information based on user's id
+            parameters:
+                - name: userId
+                  in: path
+                  description: id of the user
+                  schema:
+                      type: string
+                      format: uuid
+                  required: true
+            responses:
+                200:
+                    description: user's public information
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/UserPublicInformation"
+                400:
+                    $ref: "#/components/responses/BadRequest"
+                404:
+                    description: User not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/BadRequestResponse"
+    /users/me/my-info:
+        get:
+            tags:
+                - "user"
+            operationId: getMyInformation
+            description: return user's information
+            responses:
+                200:
+                    description: user's information
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/UserInformation"
+                400:
+                    $ref: "#/components/responses/BadRequest"
+                404:
+                    description: User not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/BadRequestResponse"
+        put:
+            tags:
+                - "user"
+            operationId: changeUserInformationHandler
+            description: change user information
+            requestBody:
+                required: true
+                description: user changeable fields
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/UserFields"
+            responses:
+                200:
+                    description: ok
+                400:
+                    $ref: "#/components/responses/BadRequest"
+    /users/admin/users:
+        get:
+            tags:
+                - "user"
+            operationId: adminGetListUserInformation
+            description: get list of users including user's public information
+            parameters:
+                - name: page
+                  in: query
+                  description: Page number
+                  schema:
+                      type: integer
+                      minimum: 0
+                      default: 0
+                  required: false
+                - name: size
+                  in: query
+                  schema:
+                      type: integer
+                      minimum: 1
+                      default: 20
+                  description: Page size
+                  required: false
+                - name: email
+                  in: query
+                  schema:
+                      type: string
+                      example: yuh
+                      default: ""
+                  description: email of user to find
+                  required: false
+                - name: role
+                  in: query
+                  schema:
+                      type: integer
+                      minimum: 1
+                      maximum: 3
+                      format: int64
+                  description: role id of user to find
+                  required: false
+            responses:
+                200:
+                    description: list of user info and paging details
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/UserInformationPage"
+                400:
+                    $ref: "#/components/responses/BadRequest"
+    /users/admin/users/{userId}:
+        get:
+            tags:
+                - "user"
+            operationId: adminGetUserInformation
+            description: return information based on user's id
+            parameters:
+                - name: userId
+                  in: path
+                  description: id of the user
+                  schema:
+                      type: string
+                      format: uuid
+                  required: true
+            responses:
+                200:
+                    description: user's information
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/UserInformation"
+                400:
+                    $ref: "#/components/responses/BadRequest"
+                404:
+                    description: User not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/BadRequestResponse"
+    /users/admin/users/{userId}/title:
+        put:
+            tags:
+                - "user"
+            operationId: changeUserTitleHandle
+            description: change user's title
+            parameters:
+                - name: userId
+                  in: path
+                  description: id of the user
+                  schema:
+                      type: string
+                      format: uuid
+                  required: true
+            requestBody:
+                required: true
+                description: user's email
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                title:
+                                    title: user's title
+                                    type: integer
+                                    minimum: 2
+                                    maximum: 3
+                                    format: int64
+                            required:
+                                - title
+            responses:
+                200:
+                    description: ok
+                400:
+                    $ref: "#/components/responses/BadRequest"
+                404:
+                    description: User not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/BadRequestResponse"
+    /users/action/rating:
+        post:
+            tags:
+                - "user"
+            operationId: addRatingHandle
+            description: add user rating
+            requestBody:
+                required: true
+                description: user's email
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                rating:
+                                    title: user's rating
+                                    type: integer
+                                    minimum: 1
+                                    maximum: 10
+                                userId:
+                                    type: string
+                                    format: uuid
+                            required:
+                                - title
+                                - userId
+            responses:
+                200:
+                    description: ok
+                400:
+                    $ref: "#/components/responses/BadRequest"
+                404:
+                    description: User not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/BadRequestResponse"
+
 components:
+    responses:
+        BadRequest:
+            description: Bad request.
+            content:
+                application/json:
+                    schema:
+                        $ref: "#/components/schemas/BadRequestResponse"
     schemas:
         FileUpload:
             title: file object
@@ -98,6 +539,15 @@ components:
                     title: error message
                     description: error message
                     example: File not valid
+        UserRole:
+            title: user Role
+            type: object
+            properties:
+                id:
+                    type: integer
+                    format: int64
+                role:
+                    type: string
         UserFields:
             title: user fields
             description: Editable fields of a user type.
@@ -106,7 +556,7 @@ components:
                 gender:
                     type: string
                     title: user's gender
-                    enum: 
+                    enum:
                         - male
                         - female
                         - other
@@ -124,41 +574,112 @@ components:
                     type: string
                     title: user's birth date
                     format: date
+                    example: 2017-07-21
+            required:
+                - gender
+                - phoneNumber
+                - intro
+                - image
+                - birthDate
         PublicUserField:
             title: user fields that are public fields
             allOf:
                 - $ref: "#/components/schemas/UserFields"
                 - type: object
                   properties:
-                    firstName:
-                        title: user's first name
-                        type: string
-                    lastName:
-                        title: user's last name
-                        type: string
-                    email: 
-                        title: user's email
-                        type: string
-                    registerAt:
-                        title: user's created Date
-                        type: string
-                        format: date
-                    banned:
-                        title: user's status
-                        type: boolean
-                        nullable: true
+                      firstName:
+                          title: user's first name
+                          type: string
+                      lastName:
+                          title: user's last name
+                          type: string
+                      email:
+                          title: user's email
+                          pattern: '^[^\s@]+@[^\s@]+\.[^\s@]+$'
+                          type: string
+                      registerAt:
+                          title: user's created Date
+                          type: string
+                          format: date-time
+                          example: 2017-07-21T17:32:28Z
+                      banned:
+                          title: user's status
+                          type: boolean
+                          nullable: true
+                      avgRating:
+                          title: user's average rating
+                          type: number
+            required:
+                - firstName
+                - lastName
+                - email
+                - registerAt
         UserCreationFields:
             title: user dto for sign in
+            description: can omit banned, avgRating when post data to sign up
             allOf:
                 - $ref: "#/components/schemas/PublicUserField"
                 - type: object
                   properties:
-                    password:
-                        type: string
-                        format: password
-
-
-
+                      password:
+                          type: string
+                          format: password
+                          pattern: '\S{8,30}'
+            required:
+                - password
+        UserPublicInformation:
+            title: user public information
+            description: omit balance
+            allOf:
+                - $ref: "#/components/schemas/PublicUserField"
+                - type: object
+                  properties:
+                      title:
+                          type: string
+                      role:
+                          type: string
+                      userId:
+                          type: string
+                          format: uuid
+        UserPublicInformationPage:
+            title: user public information page
+            description: user info page including total page and current page
+            type: object
+            properties:
+                users:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/UserPublicInformation"
+                totalPage:
+                    type: integer
+                    example: 10
+                currentPage:
+                    type: integer
+                    example: 0
+        UserInformation:
+            title: user information
+            description: balance
+            allOf:
+                - $ref: "#/components/schemas/UserPublicInformation"
+                - type: object
+                  properties:
+                      balance:
+                          type: number
+        UserInformationPage:
+            title: user public information page
+            description: user info page including total page and current page
+            type: object
+            properties:
+                users:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/UserInformation"
+                totalPage:
+                    type: integer
+                    example: 10
+                currentPage:
+                    type: integer
+                    example: 0
     securitySchemes:
         bearerAuth:
             type: http

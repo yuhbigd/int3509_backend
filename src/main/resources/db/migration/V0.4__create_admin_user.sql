@@ -1,0 +1,2 @@
+use db;
+INSERT INTO `db`.`users` (`user_id`, `first_name`, `last_name`, `email`, `register_at`, `gender`, `phone_number`, `banned`, `intro`, `image`, `birth_date`, `balance`, `title`, `role`, `avg_rating`) VALUES ('15e25185-b802-44bc-9533-8659fd53cf26', 'admin', 'admin', 'yuh2k1@gmail.com', '2017-07-22 00:32:28', 'male', '03642384444', '0', 'string', 'string', '2023-02-20 00:00:00', '0.00', '1', '1', '0');

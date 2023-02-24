@@ -15,12 +15,19 @@ public class KeyCloakAdminConfig {
     private String adminUsername;
     @Value("${app.properties.keycloak.ADMIN_PASSWORD}")
     private String adminPassword;
+    @Value("${app.properties.keycloak.realm}")
+    private String realm;
+    @Value("${app.properties.keycloak.client_id}")
+    private String clientId;
+    @Value("${app.properties.keycloak.url}")
+    private String url;
 
     @Bean
     protected Keycloak keycloak() {
         return KeycloakBuilder.builder()
-                .grantType(OAuth2Constants.PASSWORD).realm("nhatrotot").clientId("backend")
+                .grantType(OAuth2Constants.PASSWORD).realm(realm).clientId(clientId)
                 .clientSecret(clientSecret).username(adminUsername).password(adminPassword)
-                .serverUrl("http://localhost:8099").build();
+                .serverUrl(url).build();
     }
+
 }
