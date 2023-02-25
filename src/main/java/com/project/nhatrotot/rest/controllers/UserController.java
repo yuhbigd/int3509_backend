@@ -40,13 +40,6 @@ public class UserController implements UsersApi {
     }
 
     @Override
-    public ResponseEntity<UserPublicInformationPageDto> getListUserInformation(Integer page, Integer size) {
-        // TODO Auto-generated method stub
-        UserPublicInformationPageDto uPageDto = userService.getUsersInfoPage(page, size);
-        return new ResponseEntity<>(uPageDto, HttpStatus.OK);
-    }
-
-    @Override
     public ResponseEntity<UserInformationDto> getMyInformation() {
         JwtAuthenticationToken authenticationToken = (JwtAuthenticationToken) SecurityContextHolder.getContext()
                 .getAuthentication();
@@ -107,6 +100,13 @@ public class UserController implements UsersApi {
         userService.addUserRating(fromId, addRatingHandleRequestDto.getUserId().toString(),
                 addRatingHandleRequestDto.getRating());
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<UserPublicInformationPageDto> getListUserInformation(@Min(0) @Valid Integer page,
+            @Min(1) @Valid Integer size, @Valid String searchPhrase) {
+        UserPublicInformationPageDto uPageDto = userService.getUsersInfoPage(page, size, searchPhrase);
+        return new ResponseEntity<>(uPageDto, HttpStatus.OK);
     }
 
 }

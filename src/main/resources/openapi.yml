@@ -262,6 +262,15 @@ paths:
                       default: 20
                   description: Page size
                   required: false
+                - name: searchPhrase
+                  in: query
+                  schema:
+                      type: string
+                      example: yuh
+                      default: ""
+                  description: email or first name or last name or phone of user to find
+                  required: false
+
             responses:
                 200:
                     description: list of user info and paging details

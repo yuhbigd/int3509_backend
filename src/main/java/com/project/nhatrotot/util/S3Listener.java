@@ -31,12 +31,10 @@ public class S3Listener implements ProgressListener {
             try {
                 sseEmitter.send(sseEmitter.event().name("progress").data(String.format("%.0f", percent)));
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
             previousPercent = percent;
         }
-        // System.out.println(progressEvent.getEventType());
     }
 
 }

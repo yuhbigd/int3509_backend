@@ -131,9 +131,11 @@ public class UserService {
         throw new UserNotFoundException("User not found", HttpStatus.NOT_FOUND);
     }
 
-    public UserPublicInformationPageDto getUsersInfoPage(int page, int size) {
+    public UserPublicInformationPageDto getUsersInfoPage(int page, int size, String searchPhrase) {
         Pageable pageable = PageRequest.of(page, size);
-        var usersPage = userRepository.findAll(pageable);
+        var usersPage = userRepository
+                .findByEmailContainingOrFirstNameContainingOrLastNameContainingOrPhoneNumberContainingOrEmailContainingAllIgnoreCase(
+                        searchPhrase, searchPhrase, searchPhrase, searchPhrase, searchPhrase, pageable);
         var totalPage = usersPage.getTotalPages();
         var users = userPublicInformationMapper.convertFromUserEntityList(usersPage.getContent());
         var result = new UserPublicInformationPageDto();
