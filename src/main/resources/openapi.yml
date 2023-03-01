@@ -13,6 +13,8 @@ tags:
       description: apis for authentication feature
     - name: user
       description: apis for user feature
+    - name: payment
+      description: apis for payment feature
 paths:
     /first_request:
         get:
@@ -347,6 +349,71 @@ paths:
                     description: ok
                 400:
                     $ref: "#/components/responses/BadRequest"
+    /users/me/my-payments:
+        get:
+            tags:
+                - "user"
+            operationId: getMyPaymentsHandle
+            description: get list of my payments
+            parameters:
+                - name: page
+                  in: query
+                  description: Page number
+                  schema:
+                      type: integer
+                      minimum: 0
+                      default: 0
+                  required: false
+                - name: size
+                  in: query
+                  schema:
+                      type: integer
+                      minimum: 1
+                      default: 20
+                  description: Page size
+                  required: false
+                - name: type
+                  in: query
+                  schema:
+                      type: integer
+                      example: 1
+                      enum:
+                          - 1
+                          - 2
+                      default: ""
+                  description: type of payment to find
+                  required: false
+            responses:
+                200:
+                    description: list of user payments and paging details
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/MyPaymentsPage"
+                400:
+                    $ref: "#/components/responses/BadRequest"
+    /users/me/my-payments/{paymentId}:
+        get:
+            operationId: getMyDetailsPayments
+            description: get details payment
+            parameters:
+                - name: paymentId
+                  in: path
+                  schema:
+                      type: string
+                      format: uuid
+                  required: true
+            responses:
+                200:
+                    description: details payment (vnp or manual)
+                    content:
+                        application/json:
+                            schema:
+                                oneOf:
+                                    - $ref: "#/components/schemas/VnpPaymentDetails"
+                                    - $ref: "#/components/schemas/ManualPaymentDetail"
+                400:
+                    $ref: "#/components/responses/BadRequest"
     /users/admin/users:
         get:
             tags:
@@ -500,7 +567,263 @@ paths:
                         application/json:
                             schema:
                                 $ref: "#/components/schemas/BadRequestResponse"
+    /payment/vnpay:
+        post:
+            tags:
+                - "payment"
+            description: return vnpay payment url
+            operationId: createVnPayPaymentUrl
+            requestBody:
+                required: true
+                description: user payment's amount and user order's attachment
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                amount:
+                                    title: user's payment amount in vnd
+                                    type: number
+                                    minimum: 100_000
+                                orderAttachment:
+                                    type: string
+                            required:
+                                - amount
+                                - orderAttachment
+            responses:
+                200:
+                    description: OK
+                    content:
+                        text/plain:
+                            schema:
+                                type: string
+                                description: url of vnpay
+                                example: "https://int3509.s3.ap-southeast-1.amazonaws.com/2022-12-14+09-39-15.mp4"
+                400:
+                    $ref: "#/components/responses/BadRequest"
+    /payment/manual:
+        post:
+            tags:
+                - "payment"
+            description: create manual payment request
+            operationId: createManualPaymentRequest
+            requestBody:
+                required: true
+                description: user payment's amount and user order's attachment
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                amount:
+                                    title: user's payment amount in vnd
+                                    type: number
+                                    minimum: 100_000
+                                orderAttachment:
+                                    type: string
+                            required:
+                                - amount
+                                - orderAttachment
+            responses:
+                200:
+                    description: OK and wait for the admin or subadmin verify
+                400:
+                    $ref: "#/components/responses/BadRequest"
+    /payment/manual/verify:
+        post:
+            tags:
+                - "payment"
+            description: verify manual payment or cancel payment
+            operationId: verifyManualPayment
+            requestBody:
+                required: true
+                description: manual payment id
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                paymentId:
+                                    type: string
+                                    format: uuid
+                                state:
+                                    type: string
+                                    enum:
+                                        - done
+                                        - cancelled
 
+                            required:
+                                - paymentId
+                                - state
+            responses:
+                200:
+                    description: ok
+                400:
+                    $ref: "#/components/responses/BadRequest"
+    /payment/vnpay-return:
+        get:
+            tags:
+                - "payment"
+            description: vnpay payment callback
+            operationId: VnPayAfterPurchaseCallback
+            parameters:
+                - name: vnp_TmnCode
+                  in: query
+                  schema:
+                      type: string
+                  required: true
+                - name: vnp_TxnRef
+                  in: query
+                  schema:
+                      type: string
+                  required: true
+                - name: vnp_OrderInfo
+                  in: query
+                  schema:
+                      type: string
+                  required: true
+                - name: vnp_Amount
+                  in: query
+                  schema:
+                      type: number
+                  required: true
+                - name: vnp_ResponseCode
+                  in: query
+                  schema:
+                      type: string
+                  required: true
+                - name: vnp_BankCode
+                  in: query
+                  schema:
+                      type: string
+                  required: true
+                - name: vnp_BankTranNo
+                  in: query
+                  schema:
+                      type: string
+                  required: false
+                - name: vnp_CardType
+                  in: query
+                  schema:
+                      type: string
+                  required: true
+                - name: vnp_PayDate
+                  in: query
+                  schema:
+                      type: string
+                  required: true
+                - name: vnp_TransactionNo
+                  in: query
+                  schema:
+                      type: string
+                  required: true
+                - name: vnp_TransactionStatus
+                  in: query
+                  schema:
+                      type: string
+                  required: true
+                - name: vnp_SecureHash
+                  in: query
+                  schema:
+                      type: string
+                  required: true
+
+            responses:
+                302:
+                    description: OK or Error
+    /payment/admin/payments:
+        get:
+            tags:
+                - "payment"
+            operationId: getAkkPaymentsHandle
+            description: get list of payments
+            parameters:
+                - name: page
+                  in: query
+                  description: Page number
+                  schema:
+                      type: integer
+                      minimum: 0
+                      default: 0
+                  required: false
+                - name: size
+                  in: query
+                  schema:
+                      type: integer
+                      minimum: 1
+                      default: 20
+                  description: Page size
+                  required: false
+                - name: type
+                  in: query
+                  schema:
+                      type: integer
+                      example: 1
+                      enum:
+                          - 1
+                          - 2
+                  description: type of payment to find
+                  required: false
+                - name: userEmail
+                  in: query
+                  schema:
+                      type: string
+                      default: ""
+                  required: false
+                - name: paymentState
+                  in: query
+                  schema:
+                      type: string
+                      enum:
+                          - pending
+                          - done
+                          - cancelled
+                          - ""
+                      default: ""
+                  required: false
+                - name: sortBy
+                  in: query
+                  schema:
+                      type: string
+                      enum:
+                          - createdAt
+                      default: "createdAt"
+                - name: sortOrder
+                  in: query
+                  schema:
+                      type: string
+                      enum:
+                          - asc
+                          - desc
+                      default: "desc"
+            responses:
+                200:
+                    description: list of user payments and paging details
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PaymentsPage"
+                400:
+                    $ref: "#/components/responses/BadRequest"
+    /payment/admin/payments/{paymentId}:
+        get:
+            operationId: getDetailsPayments
+            description: get details payment
+            parameters:
+                - name: paymentId
+                  in: path
+                  schema:
+                      type: string
+                      format: uuid
+                  required: true
+            responses:
+                200:
+                    description: details payment (vnp or manual)
+                    content:
+                        application/json:
+                            schema:
+                                oneOf:
+                                    - $ref: "#/components/schemas/VnpPaymentDetails"
+                                    - $ref: "#/components/schemas/ManualPaymentDetail"
+                400:
+                    $ref: "#/components/responses/BadRequest"
 components:
     responses:
         BadRequest:
@@ -689,6 +1012,117 @@ components:
                 currentPage:
                     type: integer
                     example: 0
+        MyPayments:
+            title: user payment details
+            description: user payment details exclude userId
+            properties:
+                paymentId:
+                    type: string
+                    format: uuid
+                createdAt:
+                    type: string
+                    format: date-time
+                total:
+                    type: number
+                paymentDescription:
+                    type: string
+                type:
+                    type: string
+                state:
+                    type: string
+                    enum:
+                        - done
+                        - pending
+                        - cancelled
+            required:
+                - paymentId
+                - createdAt
+                - total
+                - paymentDescription
+                - type
+                - state
+        MyPaymentsPage:
+            title: user payments pageable
+            description: user payments pageable
+            properties:
+                payments:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/MyPayments"
+                totalPage:
+                    type: integer
+                    example: 10
+                currentPage:
+                    type: integer
+                    example: 0
+        Payment:
+            title: user payment include email
+            description: user payment include email
+            allOf:
+                - $ref: "#/components/schemas/MyPayments"
+                - type: object
+                  properties:
+                      email:
+                          type: string
+                  required:
+                      - email
+
+        PaymentsPage:
+            title: list payments
+            description: show payments to the admin
+            properties:
+                payments:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/Payment"
+                totalPage:
+                    type: integer
+                    example: 10
+                currentPage:
+                    type: integer
+                    example: 0
+        VnpPaymentDetails:
+            title: vnp payment detail
+            properties:
+                vnpTransNo:
+                    type: string
+                vnpOrderInfo:
+                    type: string
+                vnpAmount:
+                    type: number
+                vnpBankCode:
+                    type: string
+                vnpBankTransNo:
+                    type: string
+                vnpCardType:
+                    type: string
+                vnpDate:
+                    type: string
+                    format: date-time
+            required:
+                - vnpTransNo
+                - vnpOrderInfo
+                - vnpAmount
+                - vnpBankTranNo
+                - vnpCardType
+                - vnpDate
+        ManualPaymentDetail:
+            title: manual payment details
+            properties:
+                creatorEmail:
+                    type: string
+                verifierEmail:
+                    type: string
+                amount:
+                    type: number
+                createdAt:
+                    type: string
+                    format: date-time
+            required:
+                - creatorEmail
+                - verifierEmail
+                - amount
+                - createdAt
     securitySchemes:
         bearerAuth:
             type: http

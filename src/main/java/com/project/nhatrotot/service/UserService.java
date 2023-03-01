@@ -21,28 +21,40 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.project.nhatrotot.mapper.ManualPaymentDtoMapper;
+import com.project.nhatrotot.mapper.MyPaymentDtoMapper;
 import com.project.nhatrotot.mapper.UserCreationMapper;
 import com.project.nhatrotot.mapper.UserInformationMapper;
 import com.project.nhatrotot.mapper.UserPublicInformationMapper;
+import com.project.nhatrotot.mapper.VnpPaymentMapper;
 import com.project.nhatrotot.model.Gender;
+import com.project.nhatrotot.model.Payment;
 import com.project.nhatrotot.model.UserEntity;
 import com.project.nhatrotot.model.UserRating;
 import com.project.nhatrotot.model.UserTitle;
+import com.project.nhatrotot.repository.jpa.ManualPaymentRepository;
+import com.project.nhatrotot.repository.jpa.PaymentRepository;
 import com.project.nhatrotot.repository.jpa.UserEntityRepository;
 import com.project.nhatrotot.repository.jpa.UserRatingRepository;
 import com.project.nhatrotot.repository.jpa.UserRoleRepository;
 import com.project.nhatrotot.repository.jpa.UserTitleRepository;
+import com.project.nhatrotot.repository.jpa.VnpayRespository;
 import com.project.nhatrotot.rest.advice.CustomException.CreateUserException;
 import com.project.nhatrotot.rest.advice.CustomException.GeneralException;
 import com.project.nhatrotot.rest.advice.CustomException.UserNotAllowedException;
 import com.project.nhatrotot.rest.advice.CustomException.UserNotFoundException;
+import com.project.nhatrotot.rest.dto.GetMyDetailsPayments200ResponseDto;
+import com.project.nhatrotot.rest.dto.ManualPaymentDetailDto;
+import com.project.nhatrotot.rest.dto.MyPaymentsPageDto;
 import com.project.nhatrotot.rest.dto.UserCreationFieldsDto;
 import com.project.nhatrotot.rest.dto.UserInformationDto;
 import com.project.nhatrotot.rest.dto.UserInformationPageDto;
 import com.project.nhatrotot.rest.dto.UserPublicInformationDto;
 import com.project.nhatrotot.rest.dto.UserPublicInformationPageDto;
+import com.project.nhatrotot.rest.dto.VnpPaymentDetailsDto;
 import com.project.nhatrotot.util.constant.UserConstant;
 
 @Service
@@ -56,17 +68,26 @@ public class UserService {
     private UserCreationMapper userCreationMapper;
     private UserTitleRepository userTitleRepository;
     private UserRatingRepository userRatingRepository;
-
+    private PaymentRepository paymentRepository;
     private UserRoleRepository userRoleRepository;
+    private ManualPaymentRepository manualPaymentRepository;
+    private VnpayRespository vnpayRespository;
+
     private UserPublicInformationMapper userPublicInformationMapper;
     private UserInformationMapper userInformationMapper;
+    private MyPaymentDtoMapper myPaymentDtoMapper;
+    private ManualPaymentDtoMapper manualPaymentDetailDtoMapper;
+    private VnpPaymentMapper vnpPaymentMapper;
 
     private RequestUtilService requestUtil;
 
     public UserService(Keycloak keycloak, UserEntityRepository userRepository, UserCreationMapper userCreationMapper,
             UserTitleRepository userTitleRepository, UserRoleRepository userRoleRepository,
             UserPublicInformationMapper userPublicInformationMapper, UserInformationMapper userInformationMapper,
-            RequestUtilService requestUtil, UserRatingRepository userRatingRepository) {
+            RequestUtilService requestUtil, UserRatingRepository userRatingRepository,
+            PaymentRepository paymentRepository, MyPaymentDtoMapper myPaymentDtoMapper,
+            ManualPaymentDtoMapper manualPaymentDetailDtoMapper, VnpPaymentMapper vnpPaymentMapper,
+            ManualPaymentRepository manualPaymentRepository, VnpayRespository vnpayRespository) {
         this.keycloak = keycloak;
         this.userRepository = userRepository;
         this.userCreationMapper = userCreationMapper;
@@ -76,6 +97,58 @@ public class UserService {
         this.userInformationMapper = userInformationMapper;
         this.requestUtil = requestUtil;
         this.userRatingRepository = userRatingRepository;
+        this.paymentRepository = paymentRepository;
+        this.myPaymentDtoMapper = myPaymentDtoMapper;
+        this.manualPaymentDetailDtoMapper = manualPaymentDetailDtoMapper;
+        this.vnpPaymentMapper = vnpPaymentMapper;
+        this.manualPaymentRepository = manualPaymentRepository;
+        this.vnpayRespository = vnpayRespository;
+    }
+
+    public GetMyDetailsPayments200ResponseDto getMyDetailsPayments200ResponseDto(String paymentId, String userId) {
+        var paymentOpt = paymentRepository.findById(paymentId);
+        if (!paymentOpt.isPresent()) {
+            throw new GeneralException("payment not found", HttpStatus.NOT_FOUND);
+        }
+        var payment = paymentOpt.get();
+        if (!payment.getUser().getUserId().equals(userId)) {
+            throw new GeneralException("forbidden", HttpStatus.FORBIDDEN);
+        }
+        if (payment.getType().getId().intValue() == 1) {
+            var manualPaymentOpt = manualPaymentRepository.findById(paymentId);
+            if (!manualPaymentOpt.isPresent()) {
+                throw new GeneralException("payment not found", HttpStatus.NOT_FOUND);
+            }
+            ManualPaymentDetailDto manualPaymentDetailDto = manualPaymentDetailDtoMapper
+                    .convertFromManualPayment(manualPaymentOpt.get());
+            return manualPaymentDetailDto;
+        } else if (payment.getType().getId().intValue() == 2) {
+            var VnPaymentOpt = vnpayRespository.findByPayment_PaymentIdEquals(paymentId);
+            if (!VnPaymentOpt.isPresent()) {
+                throw new GeneralException("payment not found", HttpStatus.NOT_FOUND);
+            }
+            VnpPaymentDetailsDto vnpay = vnpPaymentMapper.convertFromVnPayment(VnPaymentOpt.get());
+            return vnpay;
+        }
+        return null;
+    }
+
+    @Transactional(rollbackFor = { Exception.class, Throwable.class }, isolation = Isolation.READ_COMMITTED)
+    public MyPaymentsPageDto getPaymentsPageDto(Integer pageNum, Integer pageSize, Integer type, String userId) {
+        Pageable pageable = PageRequest.of(pageNum, pageSize);
+        Page<Payment> paymentsPage;
+        if (type == null) {
+            paymentsPage = paymentRepository.findByUser_UserIdEquals(userId, pageable);
+        } else {
+            paymentsPage = paymentRepository.findByType_IdEqualsAndUser_UserIdEquals(type, userId, pageable);
+        }
+        var totalPage = paymentsPage.getTotalPages();
+        var payments = myPaymentDtoMapper.convertFromPayments(paymentsPage.getContent());
+        var result = new MyPaymentsPageDto();
+        result.setCurrentPage(pageNum);
+        result.setTotalPage(totalPage);
+        result.setPayments(payments);
+        return result;
     }
 
     public void addUserRating(String fromId, String toId, int rating) {
@@ -94,13 +167,13 @@ public class UserService {
         userRatingRepository.save(savedRating);
     }
 
-    @Transactional
+    @Transactional(rollbackFor = { Exception.class, Throwable.class }, isolation = Isolation.REPEATABLE_READ)
     public void changeInformation(String userId, Gender gender, String phoneNumber, String intro, String image,
             LocalDateTime birthDate) {
         userRepository.updateInformation(userId, gender, phoneNumber, intro, image, birthDate);
     }
 
-    @Transactional
+    @Transactional(rollbackFor = { Exception.class, Throwable.class }, isolation = Isolation.REPEATABLE_READ)
     public void changeUserTitle(Long titleId, String userId) {
         Optional<UserTitle> titleOptional = userTitleRepository.findById(titleId);
         var title = titleOptional.get();
@@ -123,6 +196,7 @@ public class UserService {
         changePassword(userId, newPass);
     }
 
+    @Transactional(rollbackFor = { Exception.class, Throwable.class }, isolation = Isolation.READ_COMMITTED)
     public UserInformationDto getDetailsUserInfor(String userId) {
         var userOpt = userRepository.findById(userId);
         if (userOpt.isPresent()) {
@@ -145,6 +219,7 @@ public class UserService {
         return result;
     }
 
+    @Transactional(rollbackFor = { Exception.class, Throwable.class }, isolation = Isolation.READ_COMMITTED)
     public UserInformationPageDto getPrivateUserInfoPage(int page, int size, String searchPhrase, Long roleId) {
         Pageable pageable = PageRequest.of(page, size);
         Page<UserEntity> usersPage;
@@ -265,6 +340,7 @@ public class UserService {
         usersResource.get(userId).roles().realmLevel().add(Arrays.asList(roleRepresentation));
     }
 
+    @Transactional(rollbackFor = { Exception.class, Throwable.class }, isolation = Isolation.REPEATABLE_READ)
     private UserEntity saveUser(UserCreationFieldsDto uDto, String title, String role, String userId) {
         UserEntity userEntity = userCreationMapper.convertToUserModelEntity(uDto);
         userEntity.setUserId(userId);

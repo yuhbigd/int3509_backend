@@ -73,7 +73,6 @@ public class UploadFile implements FileApi {
         String userId = (String) jwt.getClaims().get("sub");
         boolean isSubAdmin = authenticationToken.getAuthorities().stream()
                 .anyMatch(a -> (a.toString().equals("ROLE_sub_admin") || a.toString().equals("ROLE_admin")));
-        System.out.println(isSubAdmin);
         String[] imagesArray = bulkDeleteFilesHandleRequestDto.getImages().toArray(String[]::new);
         if (imagesArray.length > 0) {
             try {

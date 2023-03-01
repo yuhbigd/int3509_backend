@@ -20,6 +20,8 @@ import com.project.nhatrotot.model.Gender;
 import com.project.nhatrotot.rest.api.UsersApi;
 import com.project.nhatrotot.rest.dto.AddRatingHandleRequestDto;
 import com.project.nhatrotot.rest.dto.ChangeUserTitleHandleRequestDto;
+import com.project.nhatrotot.rest.dto.GetMyDetailsPayments200ResponseDto;
+import com.project.nhatrotot.rest.dto.MyPaymentsPageDto;
 import com.project.nhatrotot.rest.dto.UserFieldsDto;
 import com.project.nhatrotot.rest.dto.UserInformationDto;
 import com.project.nhatrotot.rest.dto.UserInformationPageDto;
@@ -107,6 +109,28 @@ public class UserController implements UsersApi {
             @Min(1) @Valid Integer size, @Valid String searchPhrase) {
         UserPublicInformationPageDto uPageDto = userService.getUsersInfoPage(page, size, searchPhrase);
         return new ResponseEntity<>(uPageDto, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<MyPaymentsPageDto> getMyPaymentsHandle(@Min(0) @Valid Integer page,
+            @Min(1) @Valid Integer size, @Valid Integer type) {
+        JwtAuthenticationToken authenticationToken = (JwtAuthenticationToken) SecurityContextHolder.getContext()
+                .getAuthentication();
+        Jwt jwt = (Jwt) authenticationToken.getCredentials();
+        String userId = (String) jwt.getClaims().get("sub");
+        var paymentsPage = userService.getPaymentsPageDto(page, size, type, userId);
+        return new ResponseEntity<>(paymentsPage, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<GetMyDetailsPayments200ResponseDto> getMyDetailsPayments(UUID paymentId) {
+        JwtAuthenticationToken authenticationToken = (JwtAuthenticationToken) SecurityContextHolder.getContext()
+                .getAuthentication();
+        Jwt jwt = (Jwt) authenticationToken.getCredentials();
+        String userId = (String) jwt.getClaims().get("sub");
+        GetMyDetailsPayments200ResponseDto response = userService
+                .getMyDetailsPayments200ResponseDto(paymentId.toString(), userId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 }
