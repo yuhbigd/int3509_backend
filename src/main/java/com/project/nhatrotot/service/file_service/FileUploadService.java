@@ -132,8 +132,8 @@ public class FileUploadService {
         PutObjectRequest putObjectRequest = putRequest(file, awsFileName, sseEmitter);
         Upload uploadFile = transferManager.upload(putObjectRequest);
         uploadFile.waitForCompletion();
-        sseEmitter.complete();
         sseEmitter.send(sseEmitter.event().name("complete").data("complete"));
+        sseEmitter.complete();
         file.delete();
         return s3Url + awsFileName;
     }
