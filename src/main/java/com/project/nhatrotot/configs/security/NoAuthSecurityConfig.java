@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -31,6 +32,8 @@ public class NoAuthSecurityConfig {
                 .requestMatchers().antMatchers("/api/users").and()
                 .requestMatchers().antMatchers("/api/users/*").and()
                 .requestMatchers().antMatchers("/api/payment/vnpay-return").and()
+                .requestMatchers().antMatchers(HttpMethod.GET,"/api/houses/*").and()
+                .requestMatchers().antMatchers(HttpMethod.GET,"/api/houses").and()
                 .authorizeHttpRequests().anyRequest()
                 .permitAll();
         return http.build();
@@ -48,6 +51,7 @@ public class NoAuthSecurityConfig {
         source.registerCorsConfiguration("/api/users", configuration);
         source.registerCorsConfiguration("/api/users/*", configuration);
         source.registerCorsConfiguration("/api/payment/vnpay-return", configuration);
+        source.registerCorsConfiguration("/api/houses/*", configuration);
 
         return source;
     }

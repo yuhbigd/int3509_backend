@@ -30,11 +30,11 @@ public class KeyCloakAdminConfig {
                 .clientSecret(clientSecret).username(adminUsername).password(adminPassword)
                 .serverUrl(url).build();
     }
-    @Bean
-    public FlywayMigrationStrategy cleanMigrateStrategy() {
-        return flyway -> {
-            flyway.repair();
-            flyway.migrate();
-        };
-    }
+    // @Bean
+    // public FlywayMigrationStrategy cleanMigrateStrategy() {
+    //     return flyway -> {
+    //         flyway.repair();
+    //         flyway.migrate();
+    //     };
+    // }
 }

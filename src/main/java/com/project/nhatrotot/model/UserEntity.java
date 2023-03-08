@@ -80,6 +80,9 @@ public class UserEntity {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     @ToString.Exclude
     private List<Payment> payments;
+    @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    private List<House> houses;
 
     public boolean getBanned() {
         return this.banned;

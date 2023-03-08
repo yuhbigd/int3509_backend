@@ -82,7 +82,7 @@ public class UploadFile implements FileApi {
                 throw new GeneralException(e.getMessage(), HttpStatus.BAD_REQUEST);
             }
         }
-        return FileApi.super.bulkDeleteFilesHandle(bulkDeleteFilesHandleRequestDto);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 }

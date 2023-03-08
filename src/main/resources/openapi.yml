@@ -15,6 +15,10 @@ tags:
       description: apis for user feature
     - name: payment
       description: apis for payment feature
+    - name: country
+      description: apis for country details
+    - name: house
+      description: apis for house details
 paths:
     /first_request:
         get:
@@ -727,7 +731,7 @@ paths:
 
             responses:
                 302:
-                    description: OK or Error
+                    description: redirect OK or Error
     /payment/admin/payments:
         get:
             tags:
@@ -804,6 +808,8 @@ paths:
                     $ref: "#/components/responses/BadRequest"
     /payment/admin/payments/{paymentId}:
         get:
+            tags:
+                - "payment"
             operationId: getDetailsPayments
             description: get details payment
             parameters:
@@ -822,6 +828,425 @@ paths:
                                 oneOf:
                                     - $ref: "#/components/schemas/VnpPaymentDetails"
                                     - $ref: "#/components/schemas/ManualPaymentDetail"
+                400:
+                    $ref: "#/components/responses/BadRequest"
+    /country:
+        get:
+            tags:
+                - "country"
+            operationId: getAllProvince
+            description: get all 63 provinces
+            responses:
+                200:
+                    description: all 63 provinces
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    provinces:
+                                        type: array
+                                        items:
+                                            $ref: "#/components/schemas/Province"
+                400:
+                    $ref: "#/components/responses/BadRequest"
+    /country/{provinceCode}:
+        get:
+            tags:
+                - "country"
+            parameters:
+                - name: provinceCode
+                  in: path
+                  schema:
+                      type: string
+                  required: true
+            operationId: getDetailProvince
+            description: get 1 provinces
+            responses:
+                200:
+                    description: get 1 provinces
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Province"
+                400:
+                    $ref: "#/components/responses/BadRequest"
+    /country/{provinceCode}/districts:
+        get:
+            tags:
+                - "country"
+            parameters:
+                - name: provinceCode
+                  in: path
+                  schema:
+                      type: string
+                  required: true
+            operationId: getAllDistrictInProvince
+            description: get all district in provinces
+            responses:
+                200:
+                    description: get all district in provinces
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    provinces:
+                                        type: array
+                                        items:
+                                            $ref: "#/components/schemas/District"
+                400:
+                    $ref: "#/components/responses/BadRequest"
+    /country/districts/{districtCode}:
+        get:
+            tags:
+                - "country"
+            parameters:
+                - name: districtCode
+                  in: path
+                  schema:
+                      type: string
+                  required: true
+            operationId: getDetailDistrict
+            description: get 1 district
+            responses:
+                200:
+                    description: get 1 district
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/District"
+                400:
+                    $ref: "#/components/responses/BadRequest"
+    /country/districts/{districtCode}/wards:
+        get:
+            tags:
+                - "country"
+            parameters:
+                - name: districtCode
+                  in: path
+                  schema:
+                      type: string
+                  required: true
+            operationId: getAllWardsInDistrict
+            description: get All Wards In District
+            responses:
+                200:
+                    description: All Wards In District
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    ward:
+                                        type: array
+                                        items:
+                                            $ref: "#/components/schemas/Ward"
+                400:
+                    $ref: "#/components/responses/BadRequest"
+    /country/wards/{wardCode}:
+        get:
+            tags:
+                - "country"
+            parameters:
+                - name: wardCode
+                  in: path
+                  schema:
+                      type: string
+                  required: true
+            operationId: getDetailWard
+            description: get 1 ward
+            responses:
+                200:
+                    description: get 1 ward
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Ward"
+                400:
+                    $ref: "#/components/responses/BadRequest"
+    /houses:
+        get:
+            operationId: getHouseHandle
+            summary: get list of house
+            tags:
+                - "houses"
+            parameters:
+                - in: query
+                  name: queryFor
+                  required: true
+                  schema:
+                      type: string
+                      description: map for query all maximum 500 houses and not having paging. Otherwise, normal is get house with size and paging
+                      enum:
+                          - map
+                          - normal
+                - in: query
+                  name: queryType
+                  required: true
+                  schema:
+                      type: string
+                      enum:
+                          - distance
+                          - polygon
+                          - all
+                - in: query
+                  name: distance
+                  description: distance in KM
+                  schema:
+                      type: number
+                      maximum: 100
+                      minimum: 0
+                - in: query
+                  name: polygonPoints
+                  description: "flat array contain polygon points in pair. format: lon,lat,lon,lat,... always lon,lat"
+                  schema:
+                      type: array
+                      items:
+                          type: number
+                      minItems: 8
+                  style: form
+                  explode: false
+                - in: query
+                  name: mapPoint
+                  description: "format: lon,lat"
+                  schema:
+                      type: array
+                      items:
+                          type: number
+                      maxItems: 2
+                      minItems: 2
+                  style: form
+                  explode: false
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                      default: 20
+                - in: query
+                  name: pageNumber
+                  schema:
+                      type: integer
+                      default: 0
+                - in: query
+                  name: houseType
+                  schema:
+                      type: integer
+                      minimum: 1
+                      maximum: 5
+                - in: query
+                  name: ownerId
+                  schema:
+                      type: string
+                - in: query
+                  name: houseCategory
+                  schema:
+                      type: integer
+                      minimum: 1
+                      maximum: 2
+                - in: query
+                  name: hasAc
+                  schema:
+                      type: boolean
+                - in: query
+                  name: hasParking
+                  schema:
+                      type: boolean
+                - in: query
+                  name: hasElevator
+                  schema:
+                      type: boolean
+                - in: query
+                  name: hasFurnished
+                  schema:
+                      type: boolean
+                - in: query
+                  name: allowPet
+                  schema:
+                      type: boolean
+                - in: query
+                  name: province
+                  schema:
+                      type: string
+                - in: query
+                  name: district
+                  schema:
+                      type: string
+                - in: query
+                  name: ward
+                  schema:
+                      type: string
+                - in: query
+                  name: squareLte
+                  description: squares less than or equal
+                  schema:
+                      type: number
+                      minimum: 0
+                - in: query
+                  name: squareGte
+                  description: squares greater than or equal
+                  schema:
+                      type: number
+                      minimum: 0
+                - in: query
+                  name: roomLte
+                  description: rooms less than or equal
+                  schema:
+                      type: integer
+                      minimum: 0
+                - in: query
+                  name: roomGte
+                  description: rooms greater than or equal
+                  schema:
+                      type: integer
+                      minimum: 0
+                - in: query
+                  name: bedRoomLte
+                  description: bed rooms less than or equal
+                  schema:
+                      type: integer
+                      minimum: 0
+                - in: query
+                  name: bedRoomGte
+                  description: bed rooms greater than or equal
+                  schema:
+                      type: integer
+                      minimum: 0
+                - in: query
+                  name: bathRoomLte
+                  description: bath rooms less than or equal
+                  schema:
+                      type: integer
+                      minimum: 0
+                - in: query
+                  name: bathRoomGte
+                  description: bath rooms greater than or equal
+                  schema:
+                      type: integer
+                      minimum: 0
+                - in: query
+                  name: fromDate
+                  description: from date
+                  schema:
+                      type: string
+                      format: date
+                - in: query
+                  name: toDate
+                  description: to date
+                  schema:
+                      type: string
+                      format: date
+                - in: query
+                  name: priceFrom
+                  schema:
+                      type: number
+                      minimum: 0
+                - in: query
+                  name: priceTo
+                  schema:
+                      type: number
+                      minimum: 0
+                - in: query
+                  name: sortBy
+                  schema:
+                      type: string
+                      enum:
+                          - created_date
+                          - price
+                          - distanceToPoint
+                      default: created_date
+                - in: query
+                  name: sortOrder
+                  schema:
+                      type: string
+                      enum:
+                          - asc
+                          - desc
+                      default: desc
+            responses:
+                200:
+                    description: returned houses
+                    content:
+                        application/json:
+                            schema:
+                                oneOf:
+                                    - $ref: "#/components/schemas/HouseMapSearch"
+                                    - $ref: "#/components/schemas/HouseNormalSearch"
+                400:
+                    $ref: "#/components/responses/BadRequest"
+        post:
+            operationId: postHouseHandle
+            summary: create house
+            description: endpoint for create house
+            tags:
+                - "house"
+            requestBody:
+                required: true
+                description: details of new house
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/HouseCreatingDetails"
+            responses:
+                201:
+                    description: the house was successfully created.
+                400:
+                    $ref: "#/components/responses/BadRequest"
+                402:
+                    description: not enough money to create the house
+    /houses/{houseId}:
+        get:
+            operationId: getHouseById
+            summary: get house by id
+            parameters:
+                - name: houseId
+                  in: path
+                  schema:
+                      type: integer
+                  required: true
+            tags:
+                - "house"
+            responses:
+                200:
+                    description: ok
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/House"
+        put:
+            operationId: updateHouseById
+            summary: update house by id
+            parameters:
+                - name: houseId
+                  in: path
+                  schema:
+                      type: integer
+                  required: true
+            tags:
+                - "house"
+            requestBody:
+                required: true
+                description: update data
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/HouseUpdatableFields"
+            responses:
+                200:
+                    description: the house was successfully updated.
+                400:
+                    $ref: "#/components/responses/BadRequest"
+        delete:
+            operationId: deleteHouseById
+            summary: delete house by id
+            parameters:
+                - name: houseId
+                  in: path
+                  schema:
+                      type: integer
+                  required: true
+            tags:
+                - "house"
+            responses:
+                200:
+                    description: the house was successfully updated.
                 400:
                     $ref: "#/components/responses/BadRequest"
 components:
@@ -899,6 +1324,7 @@ components:
                 intro:
                     type: string
                     title: user's intro
+                    maxLength: 255
                 image:
                     type: string
                     title: user's image url
@@ -922,13 +1348,16 @@ components:
                       firstName:
                           title: user's first name
                           type: string
+                          maxLength: 50
                       lastName:
                           title: user's last name
                           type: string
+                          maxLength: 50
                       email:
                           title: user's email
                           pattern: '^[^\s@]+@[^\s@]+\.[^\s@]+$'
                           type: string
+                          maxLength: 500
                       registerAt:
                           title: user's created Date
                           type: string
@@ -1123,6 +1552,280 @@ components:
                 - verifierEmail
                 - amount
                 - createdAt
+        AdministrativeUnitDetail:
+            title: unit shared detail
+            properties:
+                code:
+                    type: string
+                name:
+                    type: string
+                nameEn:
+                    type: string
+                fullName:
+                    type: string
+                fullNameEn:
+                    type: string
+                codeName:
+                    type: string
+                unitTitle:
+                    type: string
+            required:
+                - code
+                - name
+                - nameEn
+                - fullName
+                - fullNameEn
+                - codeName
+                - unitTitle
+        Province:
+            title: province details
+            allOf:
+                - $ref: "#/components/schemas/AdministrativeUnitDetail"
+                - type: object
+                  properties:
+                      region:
+                          type: string
+                  required:
+                      - region
+        District:
+            title: District details
+            allOf:
+                - $ref: "#/components/schemas/AdministrativeUnitDetail"
+                - type: object
+                  properties:
+                      province:
+                          type: string
+                      provinceCode:
+                          type: string
+                  required:
+                      - province
+                      - provinceCode
+        Ward:
+            title: Ward details
+            allOf:
+                - $ref: "#/components/schemas/AdministrativeUnitDetail"
+                - type: object
+                  properties:
+                      district:
+                          type: string
+                      districtCode:
+                          type: string
+                  required:
+                      - district
+                      - districtCode
+        HouseUpdatableFields:
+            title: house updatable fields
+            properties:
+                address:
+                    type: string
+                thumbnail:
+                    type: string
+                images:
+                    type: array
+                    items:
+                        type: string
+                price:
+                    type: number
+                    minimum: 0
+                video:
+                    type: string
+                    nullable: true
+                visible:
+                    type: boolean
+                square:
+                    type: number
+                    minimum: 0
+                description:
+                    type: string
+                ac:
+                    type: boolean
+                    nullable: true
+                parking:
+                    type: boolean
+                    nullable: true
+                elevator:
+                    type: boolean
+                    nullable: true
+                pet:
+                    type: boolean
+                    nullable: true
+                rooms:
+                    type: integer
+                    minimum: 1
+                    nullable: true
+                bathRooms:
+                    type: integer
+                    minimum: 1
+                    nullable: true
+                bedRooms:
+                    type: integer
+                    minimum: 1
+                    nullable: true
+                maintenanceFee:
+                    type: number
+                    nullable: true
+                furnished:
+                    type: boolean
+                    nullable: true
+        HouseCreatingDetails:
+            title: house details that need when creating
+            properties:
+                latitude:
+                    type: number
+                    format: double
+                    minimum: -90
+                    maximum: 90
+                longitude:
+                    type: number
+                    format: double
+                    minimum: -180
+                    maximum: 180
+                title:
+                    type: string
+                createdDate:
+                    type: string
+                    format: date-time
+                address:
+                    type: string
+                ward:
+                    type: string
+                district:
+                    type: string
+                province:
+                    type: string
+                houseCategory:
+                    type: integer
+                    minimum: 1
+                    maximum: 2
+                houseType:
+                    type: integer
+                    minimum: 1
+                    maximum: 5
+                thumbnail:
+                    type: string
+                images:
+                    type: array
+                    items:
+                        type: string
+                price:
+                    type: number
+                video:
+                    type: string
+                    nullable: true
+                visible:
+                    type: boolean
+                    default: true
+                square:
+                    type: number
+                    minimum: 0
+                description:
+                    type: string
+                ac:
+                    type: boolean
+                    nullable: true
+                parking:
+                    type: boolean
+                    nullable: true
+                elevator:
+                    type: boolean
+                    nullable: true
+                pet:
+                    type: boolean
+                    nullable: true
+                rooms:
+                    type: integer
+                    minimum: 1
+                    nullable: true
+                bathRooms:
+                    type: integer
+                    minimum: 1
+                    nullable: true
+                bedRooms:
+                    type: integer
+                    minimum: 1
+                    nullable: true
+                maintenanceFee:
+                    type: number
+                    nullable: true
+                furnished:
+                    type: boolean
+                    nullable: true
+            required:
+                - latitude
+                - longitude
+                - address
+                - price
+                - thumbnail
+                - title
+                - visible
+                - square
+                - createdDate
+                - description
+                - ward
+                - houseCategory
+                - houseType
+        House:
+            title: everything of a house
+            allOf:
+                - $ref: "#/components/schemas/HouseCreatingDetails"
+                - type: object
+                  properties:
+                      owner:
+                          type: object
+                          properties:
+                              email:
+                                  type: string
+                              userId:
+                                  type: string
+                              userImage:
+                                  type: string
+                              userRating:
+                                  type: number
+        HouseSearchDetails:
+            title: house data to show when user query search
+            properties:
+                houseId:
+                    type: string
+                price:
+                    type: number
+                thumbnail:
+                    type: string
+                title:
+                    type: string
+                address:
+                    type: string
+                houseType:
+                    type: integer
+                tradeCategory:
+                    type: integer
+                latitude:
+                    type: double
+                longitude:
+                    type: double
+        HouseMapSearch:
+            title: house list when user query map search
+            properties:
+                houses:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/HouseSearchDetails"
+                size:
+                    description: size of house arrays
+                    type: integer
+                totalSize:
+                    description: total size search able
+                    type: integer
+        HouseNormalSearch:
+            title: house list when user query normal search
+            properties:
+                houses:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/HouseSearchDetails"
+                currentPage:
+                    type: integer
+                totalPage:
+                    type: integer
     securitySchemes:
         bearerAuth:
             type: http
