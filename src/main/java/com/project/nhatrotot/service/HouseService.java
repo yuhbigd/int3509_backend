@@ -1,55 +1,53 @@
 package com.project.nhatrotot.service;
 
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.annotation.Isolation;
-
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import co.elastic.clients.json.JsonData;
 import com.project.nhatrotot.mapper.HouseCreatingDetailsDtoMapper;
 import com.project.nhatrotot.mapper.HouseDtoMapper;
 import com.project.nhatrotot.mapper.HouseSearchDetailDtoMapper;
 import com.project.nhatrotot.mapper.HouseUpdatableFieldsDtoMapper;
 import com.project.nhatrotot.model.House;
 import com.project.nhatrotot.model.HouseES;
-import com.project.nhatrotot.model.Wards;
-import com.project.nhatrotot.model.UserEntity;
 import com.project.nhatrotot.model.HouseImages;
-import com.project.nhatrotot.repository.jpa.WardRepository;
+import com.project.nhatrotot.model.UserEntity;
+import com.project.nhatrotot.model.Wards;
+import com.project.nhatrotot.repository.jpa.HouseCategoryRepository;
 import com.project.nhatrotot.repository.jpa.HouseRepository;
 import com.project.nhatrotot.repository.jpa.HouseTypeRepository;
-import com.project.nhatrotot.repository.jpa.HouseCategoryRepository;
 import com.project.nhatrotot.repository.jpa.UserEntityRepository;
+import com.project.nhatrotot.repository.jpa.WardRepository;
 import com.project.nhatrotot.rest.advice.CustomException.CustomException;
 import com.project.nhatrotot.rest.advice.CustomException.GeneralException;
 import com.project.nhatrotot.rest.advice.CustomException.InsufficientAmount;
+import com.project.nhatrotot.rest.dto.GetHouseHandle200ResponseDto;
 import com.project.nhatrotot.rest.dto.HouseCreatingDetailsDto;
 import com.project.nhatrotot.rest.dto.HouseDto;
 import com.project.nhatrotot.rest.dto.HouseMapSearchDto;
 import com.project.nhatrotot.rest.dto.HouseNormalSearchDto;
 import com.project.nhatrotot.rest.dto.HouseUpdatableFieldsDto;
+
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.GeoShapeRelation;
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import co.elastic.clients.elasticsearch._types.GeoShapeRelation;
-import co.elastic.clients.elasticsearch._types.SortOptions;
-import co.elastic.clients.elasticsearch._types.SortOrder;
-
-import com.project.nhatrotot.rest.dto.GetHouseHandle200ResponseDto;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import co.elastic.clients.json.JsonData;
 
 @Service
 public class HouseService {
@@ -89,6 +87,7 @@ public class HouseService {
                 100L));
         House house = houseCreatingDetailsDtoMapper.convertFromHouseCreatingDetailDto(houseCreatingDetailsDto);
         house.setOwner(user);
+        house.setCreatedDate(LocalDateTime.now());
         var houseImages = houseCreatingDetailsDto.getImages().stream().map((image) -> {
             HouseImages houseImage = new HouseImages();
             houseImage.setUrl(image);

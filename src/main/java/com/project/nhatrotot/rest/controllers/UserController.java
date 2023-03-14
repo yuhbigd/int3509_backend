@@ -57,13 +57,14 @@ public class UserController implements UsersApi {
         JwtAuthenticationToken authenticationToken = (JwtAuthenticationToken) SecurityContextHolder.getContext()
                 .getAuthentication();
         Jwt jwt = (Jwt) authenticationToken.getCredentials();
+        String token = jwt.getTokenValue();
         String userId = (String) jwt.getClaims().get("sub");
         Gender gender = Gender.valueOf(userFieldsDto.getGender().toString());
         String phoneNumber = userFieldsDto.getPhoneNumber();
         String image = userFieldsDto.getImage();
         String intro = userFieldsDto.getIntro();
         LocalDateTime birthDate = userFieldsDto.getBirthDate().atStartOfDay();
-        userService.changeInformation(userId, gender, phoneNumber, intro, image, birthDate);
+        userService.changeInformation(userId, gender, phoneNumber, intro, image, birthDate, token);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

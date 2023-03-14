@@ -26,6 +26,7 @@ public interface UserCreationMapper {
     @Mapping(target = "balance", constant = "0")
     @Mapping(target = "birthDate", source = "birthDate")
     @Mapping(target = "banned", constant = "false")
+    @Mapping(target = "registerAt", expression = "java(null)")
     UserEntity convertToUserModelEntity(UserCreationFieldsDto userDto);
 
     default LocalDateTime mapStartTime(OffsetDateTime offsetDate) {

@@ -98,15 +98,16 @@ public class PaymentController implements PaymentApi {
         }
 
         @Override
-        public ResponseEntity<Void> createManualPaymentRequest(
+        public ResponseEntity<String> createManualPaymentRequest(
                         @Valid CreateVnPayPaymentUrlRequestDto createVnPayPaymentUrlRequestDto) {
                 JwtAuthenticationToken authenticationToken = (JwtAuthenticationToken) SecurityContextHolder.getContext()
                                 .getAuthentication();
                 Jwt jwt = (Jwt) authenticationToken.getCredentials();
                 String userId = (String) jwt.getClaims().get("sub");
-                paymentService.createManualPayment(userId, createVnPayPaymentUrlRequestDto.getOrderAttachment(),
+                String paymentId = paymentService.createManualPayment(userId,
+                                createVnPayPaymentUrlRequestDto.getOrderAttachment(),
                                 createVnPayPaymentUrlRequestDto.getAmount());
-                return new ResponseEntity<>(HttpStatus.OK);
+                return new ResponseEntity<>(paymentId, HttpStatus.OK);
         }
 
         @Override

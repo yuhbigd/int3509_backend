@@ -201,7 +201,7 @@ public class PaymentService {
         return new ResponseEntity<Void>(headers, HttpStatus.FOUND);
     }
 
-    public void createManualPayment(String userId, String orderDescription, BigDecimal total) {
+    public String createManualPayment(String userId, String orderDescription, BigDecimal total) {
         Payment payment = new Payment();
         String id = UUID.randomUUID().toString();
         payment.setCreatedAt(LocalDateTime.now());
@@ -213,6 +213,7 @@ public class PaymentService {
         payment.setType(option.get());
         payment.setPaymentId(id);
         paymentRepository.save(payment);
+        return id;
     }
 
     @Transactional(rollbackFor = { Exception.class, Throwable.class }, isolation = Isolation.REPEATABLE_READ)

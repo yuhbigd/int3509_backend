@@ -20,6 +20,7 @@ public interface HouseCreatingDetailsDtoMapper {
     @Mapping(target = "province", expression = "java(null)")
     @Mapping(target = "district", expression = "java(null)")
     @Mapping(target = "ward", expression = "java(null)")
+    @Mapping(target = "createdDate", expression = "java(null)")
     public House convertFromHouseCreatingDetailDto(HouseCreatingDetailsDto hDto);
 
     default LocalDateTime mapStartTime(OffsetDateTime offsetDate) {

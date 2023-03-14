@@ -23,6 +23,9 @@ public interface HouseDtoMapper {
     @Mapping(target = "owner.email", source = "owner.email")
     @Mapping(target = "owner.userImage", source = "owner.image")
     @Mapping(target = "owner.userRating", source = "owner.avgRating")
+    @Mapping(target = "owner.lastName", source = "owner.lastName")
+    @Mapping(target = "owner.firstName", source = "owner.firstName")
+    @Mapping(target = "owner.phoneNumber", source = "owner.phoneNumber")
     HouseDto convertFromHouse(House house);
 
     List<HouseDto> convertFromListHouses(List<House> houses);

@@ -169,8 +169,11 @@ public class UserService {
 
     @Transactional(rollbackFor = { Exception.class, Throwable.class }, isolation = Isolation.REPEATABLE_READ)
     public void changeInformation(String userId, Gender gender, String phoneNumber, String intro, String image,
-            LocalDateTime birthDate) {
+            LocalDateTime birthDate, String token) {
         userRepository.updateInformation(userId, gender, phoneNumber, intro, image, birthDate);
+        if (image != null) {
+            requestUtil.changeChatImage(token, image);
+        }
     }
 
     @Transactional(rollbackFor = { Exception.class, Throwable.class }, isolation = Isolation.REPEATABLE_READ)
@@ -347,6 +350,7 @@ public class UserService {
         userEntity.setAvgRating(0);
         userEntity.setBalance(new BigDecimal(0));
         userEntity.setBanned(false);
+        userEntity.setRegisterAt(LocalDateTime.now());
         var userRole = userRoleRepository.findById(UserConstant.USER_ROLES_MAP.get(role));
         var userTitle = userTitleRepository.findById(UserConstant.USER_TITLE_MAP.get(title));
         if (userRole.isPresent() && userTitle.isPresent()) {

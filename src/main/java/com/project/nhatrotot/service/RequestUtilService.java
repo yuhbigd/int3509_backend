@@ -1,5 +1,8 @@
 package com.project.nhatrotot.service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +26,9 @@ public class RequestUtilService {
         private String clientSecret;
         @Value("${app.properties.keycloak.client_id}")
         private String clientId;
+        @Autowired
+        @Qualifier("chat_url_consumer")
+        private WebClient chatWebClient;
 
         public HttpStatus requestCheckOldPassword(String email,
                         String password) {
@@ -43,5 +49,18 @@ public class RequestUtilService {
                                 .toEntity(Void.class)
                                 .block();
                 return response.getStatusCode();
+        }
+
+        public void changeChatImage(String token, String image) {
+                Map<String, String> bodyMap = new HashMap<>();
+                bodyMap.put("image", image);
+                chatWebClient.put().uri("/image").headers(h -> h.setBearerAuth(token))
+                                .contentType(MediaType.APPLICATION_JSON).body(BodyInserters.fromValue(bodyMap))
+                                .retrieve().onStatus(
+                                                status -> status.value() == 401,
+                                                clientResponse -> Mono.empty())
+                                .toEntity(Void.class)
+                                .block();
+
         }
 }

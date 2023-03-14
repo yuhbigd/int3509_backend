@@ -42,7 +42,7 @@ public class AuthController implements AuthApi {
     }
 
     @Override
-    @PreAuthorize("hasAnyRole('sub_admin')")
+    @PreAuthorize("hasAnyRole('admin')")
     public ResponseEntity<Void> createSubAdminHandle(@Valid UserCreationFieldsDto userCreationFieldsDto) {
         userService.registerSubAdmin(userCreationFieldsDto);
         return new ResponseEntity<>(HttpStatus.OK);

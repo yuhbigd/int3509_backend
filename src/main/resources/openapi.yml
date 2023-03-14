@@ -17,8 +17,10 @@ tags:
       description: apis for payment feature
     - name: country
       description: apis for country details
-    - name: house
+    - name: houses
       description: apis for house details
+    - name: statistics
+      description: apis for statistics
 paths:
     /first_request:
         get:
@@ -628,7 +630,12 @@ paths:
                                 - orderAttachment
             responses:
                 200:
-                    description: OK and wait for the admin or subadmin verify
+                    description: OK, return payment id and wait for the admin or subadmin verify
+                    content:
+                        text/plain:
+                            schema:
+                                type: string
+                                example: "02720c86-c11d-4c80-a3b1-9307d7b5esc2"
                 400:
                     $ref: "#/components/responses/BadRequest"
     /payment/manual/verify:
@@ -1176,7 +1183,7 @@ paths:
             summary: create house
             description: endpoint for create house
             tags:
-                - "house"
+                - "houses"
             requestBody:
                 required: true
                 description: details of new house
@@ -1202,7 +1209,7 @@ paths:
                       type: integer
                   required: true
             tags:
-                - "house"
+                - "houses"
             responses:
                 200:
                     description: ok
@@ -1220,7 +1227,7 @@ paths:
                       type: integer
                   required: true
             tags:
-                - "house"
+                - "houses"
             requestBody:
                 required: true
                 description: update data
@@ -1243,12 +1250,146 @@ paths:
                       type: integer
                   required: true
             tags:
-                - "house"
+                - "houses"
             responses:
                 200:
                     description: the house was successfully updated.
                 400:
                     $ref: "#/components/responses/BadRequest"
+    /statistics/purchase:
+        get:
+            operationId: getPurchaseStatistics
+            tags:
+                - "statistics"
+            parameters:
+                - in: query
+                  name: separateBy
+                  description: enum month, date
+                  schema:
+                      type: string
+                      enum:
+                          - month
+                          - date
+                  required: true
+                - in: query
+                  name: dateFrom
+                  description: date like that 2022-12-30
+                  schema:
+                      type: string
+                      format: date
+                  required: true
+                - in: query
+                  name: dateTo
+                  description: date like that 2022-12-30
+                  schema:
+                      type: string
+                      format: date
+                  required: true
+                - in: query
+                  name: type
+                  description: enum 1 2. 1 is manual, 2 is vnpay
+                  schema:
+                      type: integer
+                      maximum: 2
+                      minimum: 1
+                  required: false
+            responses:
+                200:
+                    description: list
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    oneOf:
+                                        - $ref: "#/components/schemas/PurchaseStatisticsByDate"
+                                        - $ref: "#/components/schemas/PurchaseStatisticsByMonth"
+    /statistics/houses:
+        get:
+            operationId: getHouseStatistics
+            tags:
+                - "statistics"
+            parameters:
+                - in: query
+                  name: separateBy
+                  description: enum month, date
+                  schema:
+                      type: string
+                      enum:
+                          - month
+                          - date
+                  required: true
+                - in: query
+                  name: dateFrom
+                  description: date like that 2022-12-30
+                  schema:
+                      type: string
+                      format: date
+                  required: true
+                - in: query
+                  name: dateTo
+                  description: date like that 2022-12-30
+                  schema:
+                      type: string
+                      format: date
+                  required: true
+                - in: query
+                  name: type
+                  description: enum house type. 1 -> 5
+                  schema:
+                      type: integer
+                      maximum: 5
+                      minimum: 1
+                  required: false
+                - in: query
+                  name: category
+                  description: enum house category. 1 -> 2
+                  schema:
+                      type: integer
+                      maximum: 2
+                      minimum: 1
+                  required: false
+            responses:
+                200:
+                    description: list
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    oneOf:
+                                        - $ref: "#/components/schemas/TotalHouseCreatedStatisticsByDate"
+                                        - $ref: "#/components/schemas/TotalHouseCreatedStatisticsByMonth"
+    /statistics/top-purchase:
+        get:
+            operationId: getTopPurchase
+            tags:
+                - "statistics"
+            parameters:
+                - in: query
+                  name: dateFrom
+                  description: date like that 2022-12-30
+                  schema:
+                      type: string
+                      format: date
+                  required: true
+                - in: query
+                  name: dateTo
+                  description: date like that 2022-12-30
+                  schema:
+                      type: string
+                      format: date
+                  required: true
+            responses:
+                200:
+                    description: list
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/Top10MostPurchased"
+
 components:
     responses:
         BadRequest:
@@ -1374,7 +1515,6 @@ components:
                 - firstName
                 - lastName
                 - email
-                - registerAt
         UserCreationFields:
             title: user dto for sign in
             description: can omit banned, avgRating when post data to sign up
@@ -1759,7 +1899,6 @@ components:
                 - title
                 - visible
                 - square
-                - createdDate
                 - description
                 - ward
                 - houseCategory
@@ -1781,6 +1920,12 @@ components:
                                   type: string
                               userRating:
                                   type: number
+                              lastName:
+                                  type: string
+                              firstName:
+                                  type: string
+                              phoneNumber:
+                                  type: string
         HouseSearchDetails:
             title: house data to show when user query search
             properties:
@@ -1826,6 +1971,59 @@ components:
                     type: integer
                 totalPage:
                     type: integer
+        PurchaseStatisticsByDate:
+            title: purchase statistic separated by date
+            properties:
+                date:
+                    type: string
+                    format: date
+                total:
+                    type: number
+                count:
+                    type: integer
+                    format: int64
+        PurchaseStatisticsByMonth:
+            title: purchase statistic separated by month
+            properties:
+                year:
+                    type: integer
+                month:
+                    type: integer
+                total:
+                    type: number
+                count:
+                    type: integer
+                    format: int64
+        TotalHouseCreatedStatisticsByDate:
+            title: separated by date
+            properties:
+                date:
+                    type: string
+                    format: date
+                count:
+                    type: integer
+                    format: int64
+        TotalHouseCreatedStatisticsByMonth:
+            title: separated by month
+            properties:
+                year:
+                    type: integer
+                month:
+                    type: integer
+                count:
+                    type: integer
+                    format: int64
+        Top10MostPurchased:
+            title: top 10 people purchased the most
+            properties:
+                count:
+                    type: integer
+                total:
+                    type: number
+                userId:
+                    type: string
+                email:
+                    type: string
     securitySchemes:
         bearerAuth:
             type: http
