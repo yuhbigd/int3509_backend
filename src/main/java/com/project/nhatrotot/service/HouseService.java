@@ -40,11 +40,13 @@ import com.project.nhatrotot.rest.dto.HouseNormalSearchDto;
 import com.project.nhatrotot.rest.dto.HouseUpdatableFieldsDto;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.GeoShapeRelation;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.TermsQueryField;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
 import co.elastic.clients.json.JsonData;
@@ -144,7 +146,7 @@ public class HouseService {
     }
 
     public GetHouseHandle200ResponseDto getHouses(String queryFor,
-            String queryType, BigDecimal distance,
+            String queryType, BigDecimal distance, List<Integer> houseIds,
             List<BigDecimal> polygonPoints,
             List<BigDecimal> mapPoint, Integer pageSize,
             Integer pageNumber, Integer houseType, String ownerId,
@@ -215,7 +217,9 @@ public class HouseService {
         if (fromDate != null || toDate != null) {
             filterQueries.add(createRangeQueryFromLocalDate("created_date", fromDate, toDate));
         }
-
+        if (houseIds != null && houseIds.size() > 0) {
+            filterQueries.add(createTermsQueryWithListId("house_id", houseIds));
+        }
         if (queryType.equals("distance")) {
             if (mapPoint == null) {
                 throw new GeneralException("mapPoint is missing", HttpStatus.BAD_REQUEST);
@@ -363,6 +367,13 @@ public class HouseService {
 
     private Query createTermQueryWithIntegerValue(String fieldName, Integer value) {
         return Query.of(q -> q.term(t -> t.field(fieldName).value(value)));
+    }
+
+    private Query createTermsQueryWithListId(String fieldName, List<Integer> ids) {
+        TermsQueryField arrayTerms = new TermsQueryField.Builder()
+                .value(ids.stream().map(FieldValue::of).toList())
+                .build();
+        return Query.of(q -> q.terms(tr -> tr.field("house_id").terms(arrayTerms)));
     }
 
     private Query createTermQueryWithStringValue(String fieldName, String value) {

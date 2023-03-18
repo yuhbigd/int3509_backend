@@ -1002,6 +1002,16 @@ paths:
                       maximum: 100
                       minimum: 0
                 - in: query
+                  name: houseIds
+                  description: "house id array format: 1,2,3,4,5,.."
+                  schema:
+                      type: array
+                      items:
+                          type: integer
+                      minItems: 1
+                  style: form
+                  explode: false
+                - in: query
                   name: polygonPoints
                   description: "flat array contain polygon points in pair. format: lon,lat,lon,lat,... always lon,lat"
                   schema:
