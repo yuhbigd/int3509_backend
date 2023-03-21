@@ -51,10 +51,12 @@ public class RequestUtilService {
                 return response.getStatusCode();
         }
 
-        public void changeChatImage(String token, String image) {
+        public void changeChatImage(String token, String image, String lastName, String firstName) {
                 Map<String, String> bodyMap = new HashMap<>();
                 bodyMap.put("image", image);
-                chatWebClient.put().uri("/image").headers(h -> h.setBearerAuth(token))
+                bodyMap.put("lastName", lastName);
+                bodyMap.put("firstName", firstName);
+                chatWebClient.put().uri("/user").headers(h -> h.setBearerAuth(token))
                                 .contentType(MediaType.APPLICATION_JSON).body(BodyInserters.fromValue(bodyMap))
                                 .retrieve().onStatus(
                                                 status -> status.value() == 401,

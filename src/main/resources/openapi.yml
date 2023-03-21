@@ -349,7 +349,7 @@ paths:
                 content:
                     application/json:
                         schema:
-                            $ref: "#/components/schemas/UserFields"
+                            $ref: "#/components/schemas/UserUpdatableField"
             responses:
                 200:
                     description: ok
@@ -1538,6 +1538,23 @@ components:
                           pattern: '\S{8,30}'
             required:
                 - password
+        UserUpdatableField:
+            title: user updatable fields
+            allOf:
+                - $ref: "#/components/schemas/UserFields"
+                - type: object
+                  properties:
+                      firstName:
+                          title: user's first name
+                          type: string
+                          maxLength: 50
+                      lastName:
+                          title: user's last name
+                          type: string
+                          maxLength: 50
+            required:
+                - firstName
+                - lastName
         UserPublicInformation:
             title: user public information
             description: omit balance

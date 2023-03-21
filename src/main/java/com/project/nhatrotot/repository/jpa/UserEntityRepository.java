@@ -18,9 +18,9 @@ public interface UserEntityRepository extends JpaRepository<UserEntity, String> 
         void deactivatedUsers(String userId, boolean banned);
 
         @Modifying
-        @Query("update UserEntity u set u.gender =?2, u.phoneNumber = ?3, u.intro = ?4, u.image = ?5, u.birthDate = ?6 where u.userId = ?1")
+        @Query("update UserEntity u set u.gender =?2, u.phoneNumber = ?3, u.intro = ?4, u.image = ?5, u.birthDate = ?6, u.lastName = ?7, u.firstName = ?8 where u.userId = ?1")
         void updateInformation(String userId, Gender gender, String phoneNumber, String intro, String image,
-                        LocalDateTime birthDate);
+                        LocalDateTime birthDate, String lastName, String firstName);
 
         @Modifying
         @Query("update UserEntity u set u.title =?2 where u.userId = ?1")

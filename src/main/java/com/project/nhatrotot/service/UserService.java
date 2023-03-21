@@ -169,10 +169,10 @@ public class UserService {
 
     @Transactional(rollbackFor = { Exception.class, Throwable.class }, isolation = Isolation.REPEATABLE_READ)
     public void changeInformation(String userId, Gender gender, String phoneNumber, String intro, String image,
-            LocalDateTime birthDate, String token) {
-        userRepository.updateInformation(userId, gender, phoneNumber, intro, image, birthDate);
+            LocalDateTime birthDate, String token, String lastName, String firstName) {
+        userRepository.updateInformation(userId, gender, phoneNumber, intro, image, birthDate, lastName, firstName);
         if (image != null) {
-            requestUtil.changeChatImage(token, image);
+            requestUtil.changeChatImage(token, image, lastName, firstName);
         }
     }
 

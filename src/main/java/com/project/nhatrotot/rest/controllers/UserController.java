@@ -22,11 +22,11 @@ import com.project.nhatrotot.rest.dto.AddRatingHandleRequestDto;
 import com.project.nhatrotot.rest.dto.ChangeUserTitleHandleRequestDto;
 import com.project.nhatrotot.rest.dto.GetMyDetailsPayments200ResponseDto;
 import com.project.nhatrotot.rest.dto.MyPaymentsPageDto;
-import com.project.nhatrotot.rest.dto.UserFieldsDto;
 import com.project.nhatrotot.rest.dto.UserInformationDto;
 import com.project.nhatrotot.rest.dto.UserInformationPageDto;
 import com.project.nhatrotot.rest.dto.UserPublicInformationDto;
 import com.project.nhatrotot.rest.dto.UserPublicInformationPageDto;
+import com.project.nhatrotot.rest.dto.UserUpdatableFieldDto;
 import com.project.nhatrotot.service.UserService;
 
 @RestController
@@ -52,19 +52,21 @@ public class UserController implements UsersApi {
     }
 
     @Override
-    public ResponseEntity<Void> changeUserInformationHandler(@Valid UserFieldsDto userFieldsDto) {
+    public ResponseEntity<Void> changeUserInformationHandler(@Valid UserUpdatableFieldDto userUpdatableFieldDto) {
         // TODO Auto-generated method stub
         JwtAuthenticationToken authenticationToken = (JwtAuthenticationToken) SecurityContextHolder.getContext()
                 .getAuthentication();
         Jwt jwt = (Jwt) authenticationToken.getCredentials();
         String token = jwt.getTokenValue();
         String userId = (String) jwt.getClaims().get("sub");
-        Gender gender = Gender.valueOf(userFieldsDto.getGender().toString());
-        String phoneNumber = userFieldsDto.getPhoneNumber();
-        String image = userFieldsDto.getImage();
-        String intro = userFieldsDto.getIntro();
-        LocalDateTime birthDate = userFieldsDto.getBirthDate().atStartOfDay();
-        userService.changeInformation(userId, gender, phoneNumber, intro, image, birthDate, token);
+        Gender gender = Gender.valueOf(userUpdatableFieldDto.getGender().toString());
+        String phoneNumber = userUpdatableFieldDto.getPhoneNumber();
+        String image = userUpdatableFieldDto.getImage();
+        String intro = userUpdatableFieldDto.getIntro();
+        LocalDateTime birthDate = userUpdatableFieldDto.getBirthDate().atStartOfDay();
+        String lastName = userUpdatableFieldDto.getLastName();
+        String firstName = userUpdatableFieldDto.getFirstName();
+        userService.changeInformation(userId, gender, phoneNumber, intro, image, birthDate, token, lastName, firstName);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
