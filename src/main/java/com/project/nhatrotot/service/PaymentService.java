@@ -100,7 +100,6 @@ public class PaymentService {
         if (type == null) {
             paymentsPage = paymentRepository.findByUser_EmailContainingAndPaymentStateContainingAllIgnoreCase(userEmail,
                     paymentState, pageable);
-            System.out.println(paymentsPage.getContent());
         } else {
             paymentsPage = paymentRepository
                     .findByType_IdEqualsAndUser_EmailContainingAndPaymentStateContainingAllIgnoreCase(type, userEmail,

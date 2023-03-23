@@ -109,12 +109,18 @@ public class HouseService {
         houseRepository.save(house);
     }
 
-    public HouseDto getHouseById(Integer HouseId) {
+    public HouseDto getHouseById(Integer HouseId, String userId, boolean isAdmin) {
         var houseOpt = houseRepository.findById(HouseId);
         if (!houseOpt.isPresent()) {
             throw new GeneralException("not found", HttpStatus.NOT_FOUND);
         }
-        return houseDtoMapper.convertFromHouse(houseOpt.get());
+        var house = houseOpt.get();
+        if (house.getVisible().booleanValue() == true || house.getOwner().getUserId().equals(userId)
+                || isAdmin == true) {
+            return houseDtoMapper.convertFromHouse(houseOpt.get());
+        } else {
+            throw new GeneralException("not found", HttpStatus.NOT_FOUND);
+        }
     }
 
     public void updateHouseById(String userId, boolean isAdmin, Integer houseId,
@@ -148,7 +154,7 @@ public class HouseService {
     public GetHouseHandle200ResponseDto getHouses(String queryFor,
             String queryType, BigDecimal distance, List<Integer> houseIds,
             List<BigDecimal> polygonPoints,
-            List<BigDecimal> mapPoint, Integer pageSize,
+            List<BigDecimal> mapPoint, Boolean showInvisible, Integer pageSize,
             Integer pageNumber, Integer houseType, String ownerId,
             Integer houseCategory, Boolean hasAc, Boolean hasParking,
             Boolean hasElevator, Boolean hasFurnished, Boolean allowPet, String province,
@@ -157,11 +163,15 @@ public class HouseService {
             Integer roomGte, Integer bedRoomLte, Integer bedRoomGte,
             Integer bathRoomLte, Integer bathRoomGte, LocalDate fromDate,
             LocalDate toDate, BigDecimal priceFrom,
-            BigDecimal priceTo, String sortBy, String sortOrder) {
+            BigDecimal priceTo, String sortBy, String sortOrder, String userId, boolean isAdmin) {
         List<Query> filterQueries = new ArrayList<>();
         List<Query> shouldQueries = new ArrayList<>();
         List<SortOptions> sortOptions = new ArrayList<>();
-        filterQueries.add(createTermQueryWithIntegerValue("visible", 1));
+        boolean canShowInvisible = showInvisible != null && showInvisible.booleanValue() == true
+                && ((ownerId != null && ownerId.equals(userId)) || isAdmin);
+        if (!canShowInvisible) {
+            filterQueries.add(createTermQueryWithIntegerValue("visible", 1));
+        }
         if (houseType != null) {
             filterQueries.add(createTermQueryWithIntegerValue("house_type", houseType));
         }
@@ -271,7 +281,8 @@ public class HouseService {
         if (queryFor.equals("map")) {
             try {
                 SourceConfig sourceConfig = SourceConfig.of(s -> s.filter(v -> v.includes(List.of("house_id", "price",
-                        "thumbnail", "latitude", "longitude", "address", "house_type", "trade_category", "title"))));
+                        "thumbnail", "latitude", "longitude", "address", "house_type", "trade_category", "title",
+                        "visible", "created_date"))));
                 SearchResponse<HouseES> searchResponse = elasticsearchClient.search(
                         s -> s
                                 .index("houses")
@@ -334,7 +345,8 @@ public class HouseService {
 
             try {
                 SourceConfig sourceConfig = SourceConfig.of(s -> s.filter(v -> v.includes(List.of("house_id", "price",
-                        "thumbnail", "latitude", "longitude", "address", "house_type", "trade_category", "title"))));
+                        "thumbnail", "latitude", "longitude", "address", "house_type", "trade_category", "title",
+                        "visible", "created_date"))));
                 var skippedHouse = pageSize.intValue() * pageNumber.intValue();
                 SearchResponse<HouseES> searchResponse = elasticsearchClient.search(
                         s -> s

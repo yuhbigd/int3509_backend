@@ -32,8 +32,6 @@ public class NoAuthSecurityConfig {
                 .requestMatchers().antMatchers("/api/users").and()
                 .requestMatchers().antMatchers("/api/users/*").and()
                 .requestMatchers().antMatchers("/api/payment/vnpay-return").and()
-                .requestMatchers().antMatchers(HttpMethod.GET,"/api/houses/*").and()
-                .requestMatchers().antMatchers(HttpMethod.GET,"/api/houses").and()
                 .authorizeHttpRequests().anyRequest()
                 .permitAll();
         return http.build();
@@ -51,7 +49,6 @@ public class NoAuthSecurityConfig {
         source.registerCorsConfiguration("/api/users", configuration);
         source.registerCorsConfiguration("/api/users/*", configuration);
         source.registerCorsConfiguration("/api/payment/vnpay-return", configuration);
-        source.registerCorsConfiguration("/api/houses/*", configuration);
 
         return source;
     }

@@ -1033,6 +1033,11 @@ paths:
                   style: form
                   explode: false
                 - in: query
+                  name: showInvisible
+                  description: "show unpublic house post. Only have effect on admin or when have ownerId query parameter equaling the user id in the bearer token"
+                  schema:
+                      type: boolean
+                - in: query
                   name: pageSize
                   schema:
                       type: integer
@@ -1974,6 +1979,11 @@ components:
                     type: double
                 longitude:
                     type: double
+                isVisible:
+                    type: boolean
+                createdDate:
+                    type: string
+                    format: date-time
         HouseMapSearch:
             title: house list when user query map search
             properties:
