@@ -10,12 +10,13 @@ import javax.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.security.access.prepost.PreAuthorize;
+
 import com.project.nhatrotot.model.Gender;
 import com.project.nhatrotot.rest.api.UsersApi;
 import com.project.nhatrotot.rest.dto.AddRatingHandleRequestDto;
@@ -116,12 +117,12 @@ public class UserController implements UsersApi {
 
     @Override
     public ResponseEntity<MyPaymentsPageDto> getMyPaymentsHandle(@Min(0) @Valid Integer page,
-            @Min(1) @Valid Integer size, @Valid Integer type) {
+            @Min(1) @Valid Integer size, @Valid Integer type, @Valid String sortBy, @Valid String sortOrder) {
         JwtAuthenticationToken authenticationToken = (JwtAuthenticationToken) SecurityContextHolder.getContext()
                 .getAuthentication();
         Jwt jwt = (Jwt) authenticationToken.getCredentials();
         String userId = (String) jwt.getClaims().get("sub");
-        var paymentsPage = userService.getPaymentsPageDto(page, size, type, userId);
+        var paymentsPage = userService.getPaymentsPageDto(page, size, type, userId, sortBy, sortOrder);
         return new ResponseEntity<>(paymentsPage, HttpStatus.OK);
     }
 

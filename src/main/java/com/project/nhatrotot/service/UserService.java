@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -134,8 +135,13 @@ public class UserService {
     }
 
     @Transactional(rollbackFor = { Exception.class, Throwable.class }, isolation = Isolation.READ_COMMITTED)
-    public MyPaymentsPageDto getPaymentsPageDto(Integer pageNum, Integer pageSize, Integer type, String userId) {
-        Pageable pageable = PageRequest.of(pageNum, pageSize);
+    public MyPaymentsPageDto getPaymentsPageDto(Integer pageNum, Integer pageSize, Integer type, String userId,
+            String sortBy, String sortOrder) {
+        var sort = Sort.by(sortBy).descending();
+        if (sortOrder.equals("asc")) {
+            sort = Sort.by(sortBy).ascending();
+        }
+        Pageable pageable = PageRequest.of(pageNum, pageSize, sort);
         Page<Payment> paymentsPage;
         if (type == null) {
             paymentsPage = paymentRepository.findByUser_UserIdEquals(userId, pageable);

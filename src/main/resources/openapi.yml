@@ -389,6 +389,21 @@ paths:
                       default: ""
                   description: type of payment to find
                   required: false
+                - name: sortBy
+                  in: query
+                  schema:
+                      type: string
+                      enum:
+                          - createdAt
+                      default: "createdAt"
+                - name: sortOrder
+                  in: query
+                  schema:
+                      type: string
+                      enum:
+                          - asc
+                          - desc
+                      default: "desc"
             responses:
                 200:
                     description: list of user payments and paging details

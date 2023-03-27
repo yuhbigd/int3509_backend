@@ -91,9 +91,9 @@ public class PaymentService {
     public PaymentsPageDto getPaymentsPageDto(Integer page,
             Integer size, Integer type, String userEmail,
             String paymentState, String sortBy, String sortOrder) {
-        var sort = Sort.by("createdAt").descending();
-        if (sortBy.equals("asc")) {
-            sort = Sort.by("createdAt").ascending();
+        var sort = Sort.by(sortBy).descending();
+        if (sortOrder.equals("asc")) {
+            sort = Sort.by(sortBy).ascending();
         }
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<Payment> paymentsPage;
