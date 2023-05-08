@@ -1,16 +1,17 @@
 package com.project.nhatrotot.repository.jpa;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.domain.Pageable;
+
 import com.project.nhatrotot.model.Gender;
 import com.project.nhatrotot.model.UserEntity;
 import com.project.nhatrotot.model.UserTitle;
-import java.math.BigDecimal;
 
 public interface UserEntityRepository extends JpaRepository<UserEntity, String> {
         @Modifying

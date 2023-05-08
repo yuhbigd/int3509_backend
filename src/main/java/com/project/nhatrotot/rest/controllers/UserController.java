@@ -21,6 +21,8 @@ import com.project.nhatrotot.model.Gender;
 import com.project.nhatrotot.rest.api.UsersApi;
 import com.project.nhatrotot.rest.dto.AddRatingHandleRequestDto;
 import com.project.nhatrotot.rest.dto.ChangeUserTitleHandleRequestDto;
+import com.project.nhatrotot.rest.dto.CheckIsFollowing200ResponseDto;
+import com.project.nhatrotot.rest.dto.FollowUserRequestDto;
 import com.project.nhatrotot.rest.dto.GetMyDetailsPayments200ResponseDto;
 import com.project.nhatrotot.rest.dto.MyPaymentsPageDto;
 import com.project.nhatrotot.rest.dto.UserInformationDto;
@@ -135,6 +137,50 @@ public class UserController implements UsersApi {
         GetMyDetailsPayments200ResponseDto response = userService
                 .getMyDetailsPayments200ResponseDto(paymentId.toString(), userId);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<Void> followUser(@Valid FollowUserRequestDto followUserRequestDto) {
+        JwtAuthenticationToken authenticationToken = (JwtAuthenticationToken) SecurityContextHolder.getContext()
+                .getAuthentication();
+        Jwt jwt = (Jwt) authenticationToken.getCredentials();
+        String userID = (String) jwt.getClaims().get("sub");
+        userService.followUser(userID, followUserRequestDto.getUserId().toString());
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<UserPublicInformationPageDto> getAllFollowing(@Min(0) @Valid Integer page,
+            @Min(1) @Valid Integer size) {
+        JwtAuthenticationToken authenticationToken = (JwtAuthenticationToken) SecurityContextHolder.getContext()
+                .getAuthentication();
+        Jwt jwt = (Jwt) authenticationToken.getCredentials();
+        String userId = (String) jwt.getClaims().get("sub");
+        var followingPage = userService.getFollowingUsers(userId, page, size);
+        return new ResponseEntity<>(followingPage, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<Void> unfollowUser(@Valid FollowUserRequestDto followUserRequestDto) {
+        JwtAuthenticationToken authenticationToken = (JwtAuthenticationToken) SecurityContextHolder.getContext()
+                .getAuthentication();
+        Jwt jwt = (Jwt) authenticationToken.getCredentials();
+        String userId = (String) jwt.getClaims().get("sub");
+        userService.unfollowUser(userId, followUserRequestDto.getUserId().toString());
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<CheckIsFollowing200ResponseDto> checkIsFollowing(UUID userId) {
+        JwtAuthenticationToken authenticationToken = (JwtAuthenticationToken) SecurityContextHolder.getContext()
+                .getAuthentication();
+        Jwt jwt = (Jwt) authenticationToken.getCredentials();
+        String thisUserId = (String) jwt.getClaims().get("sub");
+        boolean isFollowing = userService.isFollowing(thisUserId, userId.toString());
+        var res = new CheckIsFollowing200ResponseDto();
+        res.setIsFollowing(isFollowing);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+
     }
 
 }

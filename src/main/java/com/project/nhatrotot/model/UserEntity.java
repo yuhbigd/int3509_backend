@@ -3,6 +3,7 @@ package com.project.nhatrotot.model;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -83,6 +84,12 @@ public class UserEntity {
     @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY)
     @ToString.Exclude
     private List<House> houses;
+    @ToString.Exclude
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private Set<FollowingEntity> myFollowing;
+    @ToString.Exclude
+    @OneToMany(mappedBy = "following", fetch = FetchType.LAZY)
+    private Set<FollowingEntity> myFollower;
 
     public boolean getBanned() {
         return this.banned;

@@ -6,19 +6,23 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.nhatrotot.configs.sendgrid.SendGridUlt;
 import com.project.nhatrotot.mapper.HouseCreatingDetailsDtoMapper;
 import com.project.nhatrotot.mapper.HouseDtoMapper;
 import com.project.nhatrotot.mapper.HouseSearchDetailDtoMapper;
 import com.project.nhatrotot.mapper.HouseUpdatableFieldsDtoMapper;
+import com.project.nhatrotot.model.FollowingEntity;
 import com.project.nhatrotot.model.House;
 import com.project.nhatrotot.model.HouseES;
 import com.project.nhatrotot.model.HouseImages;
@@ -38,6 +42,9 @@ import com.project.nhatrotot.rest.dto.HouseDto;
 import com.project.nhatrotot.rest.dto.HouseMapSearchDto;
 import com.project.nhatrotot.rest.dto.HouseNormalSearchDto;
 import com.project.nhatrotot.rest.dto.HouseUpdatableFieldsDto;
+import com.sendgrid.helpers.mail.Mail;
+import com.sendgrid.helpers.mail.objects.Email;
+import com.sendgrid.helpers.mail.objects.Personalization;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
@@ -73,6 +80,10 @@ public class HouseService {
     private ElasticsearchClient elasticsearchClient;
     @Autowired
     private HouseSearchDetailDtoMapper houseSearchDetailsDtoMapper;
+    @Autowired
+    private SendGridUlt sendgrid;
+    @Value("${app.properties.frontend.url}")
+    private String frontendUrl;
 
     @Transactional(rollbackFor = { Exception.class, Throwable.class,
             CustomException.class }, isolation = Isolation.REPEATABLE_READ)
@@ -107,6 +118,30 @@ public class HouseService {
         house.setDistrict(district);
         house.setProvince(province);
         houseRepository.save(house);
+        sendMail(user, house);
+    }
+
+    private void sendMail(UserEntity user, House house) {
+        Email from = new Email("yuh2k1@gmail.com");
+        Mail mail = new Mail();
+        mail.setFrom(from);
+        Personalization personalization = createPersonalization(user.getMyFollower(), house);
+        String subject = user.getFirstName() + " Vừa đăng một bài mới";
+        personalization.addDynamicTemplateData("subject", subject);
+        sendgrid.sendMail(mail, personalization);
+    }
+
+    private Personalization createPersonalization(Set<FollowingEntity> followers, House house) {
+        Personalization personalization = new Personalization();
+        for (FollowingEntity followingEntity : followers) {
+            UserEntity follower = followingEntity.getUser();
+            personalization.addTo(new Email(follower.getEmail()));
+        }
+        personalization.addDynamicTemplateData("thumbnail", house.getThumbnail());
+        personalization.addDynamicTemplateData("link", frontendUrl + "/house-detail?id=" + house.getId());
+        personalization.addDynamicTemplateData("title", house.getTitle());
+        personalization.addDynamicTemplateData("description", "Địa chỉ: " + house.getAddress());
+        return personalization;
     }
 
     public HouseDto getHouseById(Integer HouseId, String userId, boolean isAdmin) {

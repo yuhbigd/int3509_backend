@@ -2,6 +2,7 @@ package com.project.nhatrotot.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -31,11 +32,14 @@ import com.project.nhatrotot.mapper.UserCreationMapper;
 import com.project.nhatrotot.mapper.UserInformationMapper;
 import com.project.nhatrotot.mapper.UserPublicInformationMapper;
 import com.project.nhatrotot.mapper.VnpPaymentMapper;
+import com.project.nhatrotot.model.FollowingEntity;
+import com.project.nhatrotot.model.FollowingKey;
 import com.project.nhatrotot.model.Gender;
 import com.project.nhatrotot.model.Payment;
 import com.project.nhatrotot.model.UserEntity;
 import com.project.nhatrotot.model.UserRating;
 import com.project.nhatrotot.model.UserTitle;
+import com.project.nhatrotot.repository.jpa.FollowingRepository;
 import com.project.nhatrotot.repository.jpa.ManualPaymentRepository;
 import com.project.nhatrotot.repository.jpa.PaymentRepository;
 import com.project.nhatrotot.repository.jpa.UserEntityRepository;
@@ -73,6 +77,7 @@ public class UserService {
     private UserRoleRepository userRoleRepository;
     private ManualPaymentRepository manualPaymentRepository;
     private VnpayRespository vnpayRespository;
+    private FollowingRepository followingRepository;
 
     private UserPublicInformationMapper userPublicInformationMapper;
     private UserInformationMapper userInformationMapper;
@@ -88,7 +93,8 @@ public class UserService {
             RequestUtilService requestUtil, UserRatingRepository userRatingRepository,
             PaymentRepository paymentRepository, MyPaymentDtoMapper myPaymentDtoMapper,
             ManualPaymentDtoMapper manualPaymentDetailDtoMapper, VnpPaymentMapper vnpPaymentMapper,
-            ManualPaymentRepository manualPaymentRepository, VnpayRespository vnpayRespository) {
+            ManualPaymentRepository manualPaymentRepository, VnpayRespository vnpayRespository,
+            FollowingRepository followingRepository) {
         this.keycloak = keycloak;
         this.userRepository = userRepository;
         this.userCreationMapper = userCreationMapper;
@@ -104,6 +110,7 @@ public class UserService {
         this.vnpPaymentMapper = vnpPaymentMapper;
         this.manualPaymentRepository = manualPaymentRepository;
         this.vnpayRespository = vnpayRespository;
+        this.followingRepository = followingRepository;
     }
 
     public GetMyDetailsPayments200ResponseDto getMyDetailsPayments200ResponseDto(String paymentId, String userId) {
@@ -302,6 +309,64 @@ public class UserService {
         } else {
             throw new UserNotFoundException("Email not valid");
         }
+    }
+
+    public void followUser(String userId, String followingId) {
+        if (!userId.equals(followingId)) {
+            var checkUser = userRepository.findById(followingId);
+            if (checkUser.isPresent()) {
+                var key = new FollowingKey(userId, followingId);
+                var followingEntity = new FollowingEntity();
+                followingEntity.setId(key);
+                followingRepository.save(followingEntity);
+            } else {
+                throw new UserNotFoundException("user not found");
+            }
+        } else {
+            throw new UserNotFoundException("Error: can not follow yourself");
+        }
+    }
+
+    public UserPublicInformationPageDto getFollowingUsers(String userId, int pageNums, int size) {
+        Pageable pageable = PageRequest.of(pageNums, size);
+        Page<FollowingEntity> page = followingRepository.findById_UserId(userId, pageable);
+        List<FollowingEntity> followingEntityList = page.getContent();
+        List<UserEntity> followingList = new ArrayList<>();
+        for (FollowingEntity followingEntity : followingEntityList) {
+            followingList.add(followingEntity.getFollowing());
+        }
+        var totalPage = page.getTotalPages();
+        var users = userPublicInformationMapper.convertFromUserEntityList(followingList);
+        var result = new UserPublicInformationPageDto();
+        result.setCurrentPage(pageNums);
+        result.setTotalPage(totalPage);
+        result.setUsers(users);
+        return result;
+    }
+
+    public void unfollowUser(String userId, String followingUserId) {
+        var checkUser = userRepository.findById(followingUserId);
+        if (checkUser.isPresent()) {
+            var key = new FollowingKey(userId, followingUserId);
+            var followingEntity = new FollowingEntity();
+            followingEntity.setId(key);
+            try {
+                followingRepository.deleteById(key);
+            } catch (Exception e) {
+                throw new UserNotFoundException("you aren't following this user");
+            }
+        } else {
+            throw new UserNotFoundException("user not found");
+        }
+    }
+
+    public boolean isFollowing(String userId, String followingId) {
+        var key = new FollowingKey(userId, followingId);
+        var isPresent = followingRepository.findById(key);
+        if (isPresent.isPresent()) {
+            return true;
+        }
+        return false;
     }
 
     private void registerUser(UserCreationFieldsDto uDto, String title, String role) {

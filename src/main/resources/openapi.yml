@@ -588,6 +588,122 @@ paths:
                         application/json:
                             schema:
                                 $ref: "#/components/schemas/BadRequestResponse"
+    /users/actions/following:
+        post:
+            tags:
+                - "user"
+            operationId: followUser
+            description: following an user
+            requestBody:
+                required: true
+                description: user's id
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                userId:
+                                    type: string
+                                    format: uuid
+                            required:
+                                - userId
+            responses:
+                200:
+                    description: ok
+                400:
+                    $ref: "#/components/responses/BadRequest"
+                404:
+                    description: User not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/BadRequestResponse"
+        get:
+            tags:
+                - "user"
+            operationId: getAllFollowing
+            description: get list of users including user's public information
+            parameters:
+                - name: page
+                  in: query
+                  description: Page number
+                  schema:
+                      type: integer
+                      minimum: 0
+                      default: 0
+                  required: false
+                - name: size
+                  in: query
+                  schema:
+                      type: integer
+                      minimum: 1
+                      default: 20
+                  description: Page size
+                  required: false
+            responses:
+                200:
+                    description: list of user info and paging details
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/UserPublicInformationPage"
+        delete:
+            tags:
+                - "user"
+            operationId: unfollowUser
+            description: unfollowing an user
+            requestBody:
+                required: true
+                description: user's id
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                userId:
+                                    type: string
+                                    format: uuid
+                            required:
+                                - userId
+            responses:
+                200:
+                    description: ok
+                400:
+                    $ref: "#/components/responses/BadRequest"
+                404:
+                    description: Not following this user
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/BadRequestResponse"
+    /users/actions/following/checking/{userId}:
+        get:
+            tags:
+                - "user"
+            operationId: checkIsFollowing
+            description: whether user following this user or not
+            parameters:
+                - name: userId
+                  in: path
+                  description: id of the user
+                  schema:
+                      type: string
+                      format: uuid
+                  required: true
+            responses:
+                200:
+                    description: details response
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    isFollowing:
+                                        type: boolean
+                404:
+                    description: Not following this user
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/BadRequestResponse"
     /payment/vnpay:
         post:
             tags:
